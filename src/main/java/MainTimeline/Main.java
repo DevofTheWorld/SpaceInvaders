@@ -24,11 +24,11 @@ public class Main extends Application {
         vbox.setAlignment(Pos.CENTER);
         vbox.setSpacing(15);
 
-        Canvas canvas = new Canvas(960, 540);
+        Canvas canvas = new Canvas(520, 720);
         GraphicsContext gb = canvas.getGraphicsContext2D();
 
         Image bg = new Image(getClass().getResource("/parallax-space-backgound.png").toExternalForm());
-        gb.drawImage(bg, 0, 0, 960, 540);
+        gb.drawImage(bg, 0, 0, 520, 720);
 
         Button b1 = new Button("Start game");
         Button b2 = new Button("About");
@@ -41,7 +41,7 @@ public class Main extends Application {
         root.getChildren().addAll(canvas, vbox);
 
 
-        Scene scene = new Scene(root, 960, 540);
+        Scene scene = new Scene(root, 520, 720);
         stage.setScene(scene);
         stage.setTitle("Space Invaders");
         stage.show();
