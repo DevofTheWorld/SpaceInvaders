@@ -26,62 +26,35 @@ public class Main extends Application {
         vbox.setAlignment(Pos.CENTER);
         vbox.setSpacing(15);
 
-        Canvas canvas = new Canvas(520, 720);
+        Canvas canvas = new Canvas(720, 720);
         GraphicsContext gb = canvas.getGraphicsContext2D();
 
-        Image bg = new Image(getClass().getResource("/parallax-space-backgound.png").toExternalForm());
-        gb.drawImage(bg, 0, 0, 520, 720);
+        //backrground layout
+        Image bg = new Image(getClass().getResource("/parallax-space-backgound.png").toExternalForm()); //
+        gb.drawImage(bg, 0, 0, 720, 720);
 
+        //Buttons for the main menu
         Button b1 = new Button("Start game");
         Button b2 = new Button("About");
         Button b3 = new Button("Instructions");
         Button b4 = new Button("Exit");
 
         vbox.getChildren().addAll(b1, b2, b3, b4);
-//**********************************************************//
-        VBox gameroot = new VBox();
-        gameroot.setAlignment(Pos.CENTER);
-        Label gameText = new Label("Game will be release soon");
-        Button backBtn = new Button("Back");
 
-        gameroot.getChildren().addAll(gameText, backBtn);
-        Scene gameScene = new Scene(gameroot, 520, 720);
-
-//********************************************************//
-        VBox abt = new VBox();
-        abt.setAlignment(Pos.CENTER);
-        Label abtText = new Label("The final output of Group 5 for Comprog 2");
-        Button backBtn2 = new Button("Back");
-
-        abt.getChildren().addAll(abtText, backBtn2);
-        Scene aboutScene = new Scene(abt, 520, 720);
-
-//********************************************************//
-
-//********************************************************//
-        VBox instrct = new VBox();
-        instrct.setAlignment(Pos.CENTER);
-        Label instText = new Label("Destroy the enemies and conquer the universe");
-        Button instBtn2 = new Button("Back");
-
-        instrct.getChildren().addAll(instText, instBtn2);
-        Scene instScene = new Scene(instrct, 520, 720);
-
-//********************************************************//
-
-        b1.setOnAction(e -> stage.setScene(gameScene));
-        b2.setOnAction(e -> stage.setScene(aboutScene));
-        b3.setOnAction(e -> stage.setScene(instScene));
-        b4.setOnAction(e -> System.exit(0));
 
         StackPane root = new StackPane();
         root.getChildren().addAll(canvas, vbox);
+        Scene scene = new Scene(root, 720, 720);
+        menuUI buttonFunc = new menuUI();
 
-        Scene scene = new Scene(root, 520, 720);
+        //Sets actions on butto when clicked
+        b1.setOnAction(e -> stage.setScene(buttonFunc.startGame(stage, scene)));
+        b2.setOnAction(e -> stage.setScene(buttonFunc.abtBtn(stage, scene)));
+        b3.setOnAction(e -> stage.setScene(buttonFunc.instructionBtn(stage, scene)));
+        b4.setOnAction(e -> System.exit(0));
+
+
         stage.setScene(scene);
-        backBtn.setOnAction(e -> stage.setScene(scene));
-        backBtn2.setOnAction(e -> stage.setScene(scene));
-        instBtn2.setOnAction(e -> stage.setScene(scene));
         stage.setTitle("Space Invaders");
         stage.show();
 
