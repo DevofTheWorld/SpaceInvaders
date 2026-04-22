@@ -42,7 +42,7 @@ public class menuUI {
             protected Void call() throws Exception {
 
                 for (int i = 0; i <= 100; i++) {
-                    Thread.sleep(20); // fake loading
+                    Thread.sleep(20);
                     updateProgress(i, 100);
                 }
 
@@ -51,7 +51,6 @@ public class menuUI {
         };
 
         loadBar.progressProperty().bind(task.progressProperty());
-
 
         task.setOnSucceeded(e -> {
             stage.setScene(startGame(stage, menuScene));
@@ -69,6 +68,9 @@ public class menuUI {
 
         Image bgImg = new Image("/animatedbackground.gif");
         ImageView background = new ImageView(bgImg);
+        background.setFitHeight(720);
+        background.setFitWidth(720);
+        background.setPreserveRatio(false);
 
         StackPane root = new StackPane(background, gameroot);
 
@@ -91,6 +93,9 @@ public class menuUI {
 
         Image bgImg = new Image("/animatedbackground.gif");
         ImageView background = new ImageView(bgImg);
+        background.setFitHeight(720);
+        background.setFitWidth(720);
+        background.setPreserveRatio(false);
 
         StackPane root = new StackPane(background, abt);
 
@@ -113,6 +118,9 @@ public class menuUI {
 
         Image bgImg = new Image("/animatedbackground.gif");
         ImageView background = new ImageView(bgImg);
+        background.setFitHeight(720);
+        background.setFitWidth(720);
+        background.setPreserveRatio(false);
 
         StackPane root = new StackPane(background, instrct);
 
