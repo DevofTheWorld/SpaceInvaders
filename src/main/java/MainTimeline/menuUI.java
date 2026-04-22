@@ -1,9 +1,11 @@
 package MainTimeline;
 
+import javafx.concurrent.Task;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
@@ -13,36 +15,68 @@ import javafx.scene.paint.Color;
 
 public class menuUI {
 
+    private static ProgressBar loadBar;
 
-    protected static Scene startGame(Stage stage, Scene previousScene1){ //Sets a new scene for start game
-    VBox gameroot = new VBox();
-    gameroot.setSpacing(15);
-    gameroot.setAlignment(Pos.CENTER);
+    protected static Scene createLoadingScene() {
 
-    Label gameText = new Label("Game will be released soon");
-    gameText.setTextFill(Color.WHITE);
-    Button backBtn = new Button("Back");
+        Label loadLabel = new Label("Loading...");
+        loadBar = new ProgressBar(0);
 
-    gameroot.getChildren().addAll(gameText, backBtn);
-
-    backBtn.setOnAction(e -> {stage.setScene(previousScene1);}); //makes back button functional
+        VBox loadingRoot = new VBox(10, loadLabel, loadBar);
+        loadingRoot.setAlignment(Pos.CENTER);
 
         Image bgImg = new Image("/animatedbackground.gif");
         ImageView background = new ImageView(bgImg);
         background.setFitHeight(720);
         background.setFitWidth(720);
-        background.setPreserveRatio(false);
 
-
-        StackPane root = new StackPane();
-        root.getChildren().addAll(background, gameroot);
+        StackPane root = new StackPane(background, loadingRoot);
 
         return new Scene(root, 720, 720);
-
-
     }
 
-    protected static Scene abtBtn(Stage stage, Scene previousScene){ //Sets a new scene for about button
+    public static void loadGame(Stage stage, Scene menuScene) {
+
+        Task<Void> task = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+
+                for (int i = 0; i <= 100; i++) {
+                    Thread.sleep(20); // fake loading
+                    updateProgress(i, 100);
+                }
+
+                return null;
+            }
+        };
+
+        loadBar.progressProperty().bind(task.progressProperty());
+
+
+        task.setOnSucceeded(e -> {
+            stage.setScene(startGame(stage, menuScene));
+        });
+
+        new Thread(task).start();
+    }
+
+    protected static Scene startGame(Stage stage, Scene previousScene1) {
+
+        VBox gameroot = new VBox();
+        gameroot.setSpacing(15);
+        gameroot.setAlignment(Pos.CENTER);
+
+
+        Image bgImg = new Image("/animatedbackground.gif");
+        ImageView background = new ImageView(bgImg);
+
+        StackPane root = new StackPane(background, gameroot);
+
+        return new Scene(root, 720, 720);
+    }
+
+    protected static Scene abtBtn(Stage stage, Scene previousScene) {
+
         VBox abt = new VBox();
         abt.setSpacing(15);
         abt.setAlignment(Pos.CENTER);
@@ -51,47 +85,37 @@ public class menuUI {
         abtText.setTextFill(Color.WHITE);
 
         Button backBtn2 = new Button("Back");
-        backBtn2.setOnAction(e -> stage.setScene(previousScene)); //makes back button functional
+        backBtn2.setOnAction(e -> stage.setScene(previousScene));
 
         abt.getChildren().addAll(abtText, backBtn2);
 
         Image bgImg = new Image("/animatedbackground.gif");
         ImageView background = new ImageView(bgImg);
-        background.setFitHeight(720);
-        background.setFitWidth(720);
-        background.setPreserveRatio(false);
 
-
-        StackPane root = new StackPane();
-        root.getChildren().addAll(background, abt);
+        StackPane root = new StackPane(background, abt);
 
         return new Scene(root, 720, 720);
     }
 
-    protected static Scene instructionBtn(Stage stage, Scene previousScene){ //Sets a new scene for instruction button
+    protected static Scene instructionBtn(Stage stage, Scene previousScene) {
+
         VBox instrct = new VBox();
         instrct.setSpacing(15);
         instrct.setAlignment(Pos.CENTER);
 
         Label instText = new Label("Destroy the enemies and conquer the universe");
         instText.setTextFill(Color.WHITE);
+
         Button instBtn2 = new Button("Back");
+        instBtn2.setOnAction(e -> stage.setScene(previousScene));
 
         instrct.getChildren().addAll(instText, instBtn2);
 
-        instBtn2.setOnAction(e -> stage.setScene(previousScene)); //makes back button functional
         Image bgImg = new Image("/animatedbackground.gif");
         ImageView background = new ImageView(bgImg);
-        background.setFitHeight(720);
-        background.setFitWidth(720);
-        background.setPreserveRatio(false);
 
-
-        StackPane root = new StackPane();
-        root.getChildren().addAll(background, instrct);
+        StackPane root = new StackPane(background, instrct);
 
         return new Scene(root, 720, 720);
     }
-
-
 }
