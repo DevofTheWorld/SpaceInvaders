@@ -51,16 +51,21 @@ public class Main extends Application {
             StackPane gameRoot = new StackPane();
             Scene gameScene = new Scene(gameRoot, 720, 720);
 
-            ImageView playerSprite = new ImageView(new Image(getClass().getResource("/enemy1.png").toExternalForm()));
+            ImageView playerSprite = new ImageView(
+                    new Image(getClass().getResource("/enemy1.png").toExternalForm())
+            );
 
             gameRoot.getChildren().add(playerSprite);
 
             Player player = new Player(playerSprite, 0, 0);
             Control control = new Control();
 
-            GameLoop loop = new GameLoop(player, control);
-            loop.start();
+            playerBullets bullets = new playerBullets(player, gameRoot);
 
+            control.setBullets(bullets);
+
+            GameLoop loop = new GameLoop(player, control, bullets);
+            loop.start();
             stage.setScene(gameScene);
 
             Platform.runLater(() -> {
@@ -74,6 +79,7 @@ public class Main extends Application {
         aboutBtn.setOnAction(e -> stage.setScene(ui.abtBtn(stage, menuScene)));
         instBtn.setOnAction(e -> stage.setScene(ui.instructionBtn(stage, menuScene)));
         exitBtn.setOnAction(e -> System.exit(0));
+
 
         stage.setScene(menuScene);
         stage.setTitle("Space Invaders");

@@ -1,15 +1,18 @@
 package MainTimeline;
 
 import javafx.animation.AnimationTimer;
+import javafx.scene.image.ImageView;
 
 public class GameLoop {
 
     private Control control;
     private Player player;
+    private playerBullets bullets;
 
-    public GameLoop(Player player, Control control) {
+    public GameLoop(Player player, Control control, playerBullets bullets) {
         this.player = player;
         this.control = control;
+        this.bullets = bullets;
     }
 
     public void start() {
@@ -30,6 +33,12 @@ public class GameLoop {
                 boolean moving = dx != 0 || dy != 0;
 
                 player.move(dx, dy, moving, now);
+
+                for (ImageView bullet : bullets.getBullets()) {
+                    bullet.setTranslateY(bullet.getTranslateY() - 5);
+                }
+
+                bullets.updateBullets(now);
             }
         };
 
