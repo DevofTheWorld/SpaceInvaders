@@ -1,5 +1,6 @@
 package MainTimeline;
 
+import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -8,6 +9,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -40,41 +42,62 @@ public class menuUI {
         Task<Void> task = new Task<>() {
             @Override
             protected Void call() throws Exception {
-
                 for (int i = 0; i <= 100; i++) {
                     Thread.sleep(20);
                     updateProgress(i, 100);
                 }
-
                 return null;
             }
         };
 
         loadBar.progressProperty().bind(task.progressProperty());
 
+        // When loading finishes, switch to the actual game
         task.setOnSucceeded(e -> {
-            stage.setScene(startGame(stage, menuScene));
+            Scene gameScene = startGame(stage, menuScene);
+            stage.setScene(gameScene);
         });
 
         new Thread(task).start();
     }
 
-    protected static Scene startGame(Stage stage, Scene previousScene1) {
+    protected static Scene startGame(Stage stage, Scene previousScene) {
 
-        VBox gameroot = new VBox();
-        gameroot.setSpacing(15);
-        gameroot.setAlignment(Pos.CENTER);
+        // Use Pane instead of StackPane — positions everything by TranslateX/Y correctly
+        Pane gameRoot = new Pane();
+        Scene gameScene = new Scene(gameRoot, 720, 720);
 
-
-        Image bgImg = new Image("/animatedbackground.gif");
+        // Background — add it first so it's behind everything
+        Image bgImg = new Image(menuUI.class.getResource("/animatedbackground.gif").toExternalForm());
         ImageView background = new ImageView(bgImg);
-        background.setFitHeight(720);
         background.setFitWidth(720);
-        background.setPreserveRatio(false);
+        background.setFitHeight(720);
+        gameRoot.getChildren().add(background);
 
-        StackPane root = new StackPane(background, gameroot);
+        // Player sprite — make sure this is YOUR player image, not the enemy
+        ImageView playerSprite = new ImageView(
+                new Image(menuUI.class.getResource("/enemy1.png").toExternalForm())
+        );
+        gameRoot.getChildren().add(playerSprite);
 
-        return new Scene(root, 720, 720);
+        Player player = new Player(playerSprite, 360, 600); // start near bottom center
+        Control control = new Control();
+
+        playerBullets bullets = new playerBullets(player, gameRoot);
+        control.setBullets(bullets);
+
+        enemyBullets enemyBullets = new enemyBullets(gameRoot);
+        enemySpawner spawner = new enemySpawner(gameRoot, enemyBullets);
+
+        GameLoop loop = new GameLoop(player, control, bullets, spawner, enemyBullets);
+        loop.start();
+
+        Platform.runLater(() -> {
+            gameScene.getRoot().requestFocus();
+            control.setup(gameScene);
+        });
+
+        return gameScene;
     }
 
     protected static Scene abtBtn(Stage stage, Scene previousScene) {
@@ -98,7 +121,6 @@ public class menuUI {
         background.setPreserveRatio(false);
 
         StackPane root = new StackPane(background, abt);
-
         return new Scene(root, 720, 720);
     }
 
@@ -123,7 +145,6 @@ public class menuUI {
         background.setPreserveRatio(false);
 
         StackPane root = new StackPane(background, instrct);
-
         return new Scene(root, 720, 720);
     }
 }

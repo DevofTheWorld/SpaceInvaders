@@ -24,7 +24,7 @@ public class Player {
         sprite.setTranslateX(x);
         sprite.setTranslateY(y);
 
-        sprite.setScaleX(1.5); //Adjust sprite size
+        sprite.setScaleX(1.5);
         sprite.setScaleY(1.5);
         sprite.setSmooth(false);
 
@@ -60,5 +60,9 @@ public class Player {
     }
     public ImageView getSprite() {
         return sprite;
+    }
+
+    public double getX() {
+        return x;
     }
 }
