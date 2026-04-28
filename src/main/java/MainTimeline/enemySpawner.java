@@ -11,12 +11,11 @@ public class enemySpawner {
     private List<enemy> enemies = new ArrayList<>();
     private enemyBullets enemyBullets;
 
-    //spawn enemies every 3 seconds
     private long lastSpawnTime = 0;
-    private long spawnInterval = 3_000_000_000L;
+    private long spawnInterval = 1_500_000_000L;
 
     private long lastShootTime = 0;
-    private long shootInterval = 1_500_000_000L;
+    private long shootInterval = 300_000_000L;
 
     public enemySpawner(Pane root, enemyBullets enemyBullets) {
         this.root = root;
@@ -30,9 +29,8 @@ public class enemySpawner {
             lastSpawnTime = now;
         }
 
-
         enemies.removeIf(e -> {
-            if (e.getY() > 740) { // remove if off screen
+            if (e.getY() > 740) {
                 root.getChildren().remove(e.getSprite());
                 return true;
             }
@@ -40,9 +38,7 @@ public class enemySpawner {
             return false;
         });
 
-
         if (!enemies.isEmpty() && now - lastShootTime > shootInterval) {
-            // pick a random enemy to shoot
             enemy shooter = enemies.get((int)(Math.random() * enemies.size()));
             enemyBullets.shoot(shooter.getX(), shooter.getY());
             lastShootTime = now;
@@ -51,7 +47,10 @@ public class enemySpawner {
         enemyBullets.update();
     }
 
-    public List<enemy> getEnemies() {
-        return enemies;
+    public List<enemy> getEnemies() { return enemies; }
+
+    public void removeEnemy(enemy e) {
+        root.getChildren().remove(e.getSprite());
+        enemies.remove(e);
     }
 }
