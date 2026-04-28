@@ -14,7 +14,7 @@ public class playerBullets {
     private List<ImageView> bullets = new ArrayList<>();
     private List<Long> spawnTimes = new ArrayList<>(); // track when each bullet was created
 
-    // Load your two bullet frames
+    //load two bullet frames
     private Image frame1 = new Image(getClass().getResource("/shoot1.png").toExternalForm());
     private Image frame2 = new Image(getClass().getResource("/shoot2.png").toExternalForm());
 
@@ -41,7 +41,6 @@ public class playerBullets {
         root.getChildren().add(bullet);
     }
 
-    // Call this every frame from GameLoop, passing in the current `now` timestamp
     public void updateBullets(long now) {
         for (int i = 0; i < bullets.size(); i++) {
             long elapsed = now - spawnTimes.get(i);

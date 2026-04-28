@@ -11,6 +11,7 @@ public class enemySpawner {
     private List<enemy> enemies = new ArrayList<>();
     private enemyBullets enemyBullets;
 
+    //spawn enemies every 3 seconds
     private long lastSpawnTime = 0;
     private long spawnInterval = 3_000_000_000L;
 
@@ -46,7 +47,6 @@ public class enemySpawner {
             enemyBullets.shoot(shooter.getX(), shooter.getY());
             lastShootTime = now;
         }
-
 
         enemyBullets.update();
     }
