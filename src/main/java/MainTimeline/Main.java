@@ -56,6 +56,7 @@ public class Main extends Application {
 
         stage.setScene(menuScene);
         stage.setTitle("Space Invaders");
+        stage.setResizable(false);
         stage.show();
     }
 }
