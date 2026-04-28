@@ -6,6 +6,7 @@ import javafx.scene.layout.Pane;
 
 public class spaceDebris {
 
+    //new
     private ImageView sprite;
     private double x;
     private double y;
