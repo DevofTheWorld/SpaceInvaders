@@ -14,16 +14,19 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.scene.paint.Color;
+import javafx.scene.text.TextAlignment;
 
 public class menuUI {
 
     private static ProgressBar loadBar;
 
     protected static Scene createLoadingScene() {
-        Label loadLabel = new Label("Loading...");
+        Label loadLabel = new Label("INITIALIZING SYSTEM...");
+        loadLabel.setTextFill(Color.LIMEGREEN);
         loadBar = new ProgressBar(0);
+        loadBar.setPrefWidth(300);
 
-        VBox loadingRoot = new VBox(10, loadLabel, loadBar);
+        VBox loadingRoot = new VBox(20, loadLabel, loadBar);
         loadingRoot.setAlignment(Pos.CENTER);
 
         Image bgImg = new Image(menuUI.class.getResource("/animatedbackground.gif").toExternalForm());
@@ -38,7 +41,7 @@ public class menuUI {
     public static Scene createMenuScene(Stage stage) {
         VBox menuBox = new VBox();
         menuBox.setAlignment(Pos.CENTER);
-        menuBox.setSpacing(30);
+        menuBox.setSpacing(20);
 
         Label titleLabel = new Label("SPACE INVADERS");
         titleLabel.getStyleClass().add("game-title");
@@ -48,28 +51,33 @@ public class menuUI {
         background.setFitWidth(720);
         background.setFitHeight(720);
 
+        Button startBtn = new Button("START GAME");
+        Button instBtn = new Button("INSTRUCTIONS");
+        Button aboutBtn = new Button("ABOUT");
+        Button exitBtn = new Button("EXIT");
+
+        startBtn.setPrefWidth(200);
+        instBtn.setPrefWidth(200);
+        aboutBtn.setPrefWidth(200);
+        exitBtn.setPrefWidth(200);
+
         StackPane menuRoot = new StackPane(background, menuBox);
         Scene menuScene = new Scene(menuRoot, 720, 720);
-        menuScene.getStylesheets().add(menuUI.class.getResource("style.css").toExternalForm());
 
-        Button startBtn = new Button("Start Game");
-        Button aboutBtn = new Button("About");
-        Button instBtn = new Button("Instructions");
-        Button exitBtn = new Button("Exit");
-
-        menuUI ui = new menuUI();
+        String css = menuUI.class.getResource("style.css").toExternalForm();
+        menuScene.getStylesheets().add(css);
 
         startBtn.setOnAction(e -> {
-            Scene loadingScene = menuUI.createLoadingScene();
-            stage.setScene(loadingScene);
-            menuUI.loadGame(stage, menuScene);
+            stage.setScene(createLoadingScene());
+            loadGame(stage, menuScene);
         });
 
-        menuBox.getChildren().addAll(titleLabel, startBtn, aboutBtn, instBtn, exitBtn);
-
+        menuUI ui = new menuUI();
         aboutBtn.setOnAction(e -> stage.setScene(ui.abtBtn(stage, menuScene)));
         instBtn.setOnAction(e -> stage.setScene(ui.instructionBtn(stage, menuScene)));
         exitBtn.setOnAction(e -> System.exit(0));
+
+        menuBox.getChildren().addAll(titleLabel, startBtn, instBtn, aboutBtn, exitBtn);
 
         return menuScene;
     }
@@ -96,8 +104,6 @@ public class menuUI {
                 ex.printStackTrace();
             }
         });
-
-        task.setOnFailed(e -> task.getException().printStackTrace());
 
         Thread thread = new Thread(task);
         thread.setDaemon(true);
@@ -141,63 +147,77 @@ public class menuUI {
     }
 
     protected static Scene abtBtn(Stage stage, Scene previousScene) {
-
-        VBox abt = new VBox();
-        abt.setSpacing(15);
+        VBox abt = new VBox(15);
         abt.setAlignment(Pos.CENTER);
 
         Label abtText = new Label(
-                "ABOUT\n\n" +
-                        "THIS IS THE FINAL OUTPUT OF GROUP 5 FOR COMPROG 2\n\n" +
-                        "GR5 MEMBERS:\n" +
-                        "1. ANTHONY LUMANTAO\n" +
-                        "2. MARC KEN LUZAME\n" +
-                        "3. CHRISTIAN TORRELINO\n" +
-                        "4. JOHN DENVER DIEGO\n" +
-                        "5. REIGNSTER RODRIGUEZ"
+                "--- PROJECT INFO ---\n\n" +
+                        "THIS IS THE FINAL OUTPUT OF GROUP 5\n" +
+                        "FOR COMPUTER PROGRAMMING 2\n\n" +
+                        "DEVELOPERS:\n" +
+                        "• ANTHONY LUMANTAO\n" +
+                        "• MARC KEN LUZAME\n" +
+                        "• CHRISTIAN TORRELINO\n" +
+                        "• JOHN DENVER DIEGO\n" +
+                        "• REIGNSTER RODRIGUEZ"
         );
-        //gives the about section a label for css
         abtText.getStyleClass().add("about-text");
+        abtText.setTextAlignment(TextAlignment.CENTER);
+        abtText.setTextFill(Color.WHITE);
 
-        Button backBtn2 = new Button("Back");
-        backBtn2.setOnAction(e -> stage.setScene(previousScene));
+        Button backBtn = new Button("BACK TO MENU");
+        backBtn.setOnAction(e -> stage.setScene(previousScene));
 
-        abt.getChildren().addAll(abtText, backBtn2);
-
-        Image bgImg = new Image("/animatedbackground.gif");
-        ImageView background = new ImageView(bgImg);
-        background.setFitHeight(720);
-        background.setFitWidth(720);
-        background.setPreserveRatio(false);
-
-        StackPane root = new StackPane(background, abt);
-
-        //finds the css file for the about section to use
-        root.getStylesheets().add(menuUI.class.getResource("/MainTimeline/style.css").toExternalForm());
-
-        return new Scene(root, 720, 720);
-    }
-
-    protected static Scene instructionBtn(Stage stage, Scene previousScene) {
-        VBox instrct = new VBox();
-        instrct.setSpacing(15);
-        instrct.setAlignment(Pos.CENTER);
-
-        Label instText = new Label("Destroy the enemies and conquer the universe");
-        instText.setTextFill(Color.WHITE);
-
-        Button instBtn2 = new Button("Back");
-        instBtn2.setOnAction(e -> stage.setScene(previousScene));
-
-        instrct.getChildren().addAll(instText, instBtn2);
+        abt.getChildren().addAll(abtText, backBtn);
 
         Image bgImg = new Image(menuUI.class.getResource("/animatedbackground.gif").toExternalForm());
         ImageView background = new ImageView(bgImg);
         background.setFitHeight(720);
         background.setFitWidth(720);
-        background.setPreserveRatio(false);
+
+        StackPane root = new StackPane(background, abt);
+        Scene scene = new Scene(root, 720, 720);
+        scene.getStylesheets().add(menuUI.class.getResource("style.css").toExternalForm());
+
+        return scene;
+    }
+
+    protected static Scene instructionBtn(Stage stage, Scene previousScene) {
+        VBox instrct = new VBox(20);
+        instrct.setAlignment(Pos.CENTER);
+
+        Label instTitle = new Label("MISSION BRIEFING");
+        instTitle.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #00FF00;");
+
+        Label instText = new Label(
+                "OBJECTIVE: \nDestroy the alien invaders and protect the universe!\n\n" +
+                        "CONTROLS: \n" +
+                        "• [ W / A / S / D ] KEYS - Move Spaceship\n" +
+                        "• [ SPACEBAR ] - Fire Laser Cannons\n" +
+                        "• [ Q ] - EMERGENCY DASH (Triple Speed)\n\n" +
+                        "SURVIVAL TIPS: \n" +
+                        "• Use WASD to dodge in all directions.\n" +
+                        "• Asteroids are destructive—shoot them down.\n" +
+                        "• Hold Q while moving for tactical speed!"
+        );
+        instText.setTextAlignment(TextAlignment.CENTER);
+        instText.setTextFill(Color.WHITE);
+        instText.setStyle("-fx-font-size: 16px; -fx-line-spacing: 5px;");
+
+        Button backBtn = new Button("BACK TO MENU");
+        backBtn.setOnAction(e -> stage.setScene(previousScene));
+
+        instrct.getChildren().addAll(instTitle, instText, backBtn);
+
+        Image bgImg = new Image(menuUI.class.getResource("/animatedbackground.gif").toExternalForm());
+        ImageView background = new ImageView(bgImg);
+        background.setFitHeight(720);
+        background.setFitWidth(720);
 
         StackPane root = new StackPane(background, instrct);
-        return new Scene(root, 720, 720);
+        Scene scene = new Scene(root, 720, 720);
+        scene.getStylesheets().add(menuUI.class.getResource("style.css").toExternalForm());
+
+        return scene;
     }
 }
