@@ -88,8 +88,9 @@ public class menuUI {
 
         enemyBullets enemyBullets = new enemyBullets(gameRoot);
         enemySpawner spawner = new enemySpawner(gameRoot, enemyBullets);
+        asteroidSpawner asteroidSpawner = new asteroidSpawner(gameRoot); // add
 
-        GameLoop loop = new GameLoop(player, control, bullets, spawner, enemyBullets);
+        GameLoop loop = new GameLoop(player, control, bullets, spawner, enemyBullets, asteroidSpawner); // add
         loop.start();
 
         Platform.runLater(() -> {
