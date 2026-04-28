@@ -39,6 +39,8 @@ public class GameLoop {
                 boolean moving = dx != 0 || dy != 0;
                 player.move(dx, dy, moving, now);
 
+                control.updateShooting(now);
+                
                 //player bullets
                 bullets.getBullets().removeIf(b -> {
                     if (b.getTranslateY() < -20) {
