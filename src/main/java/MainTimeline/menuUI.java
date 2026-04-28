@@ -107,8 +107,18 @@ public class menuUI {
         abt.setSpacing(15);
         abt.setAlignment(Pos.CENTER);
 
-        Label abtText = new Label("The final output of Group 5 for Comprog 2");
-        abtText.setTextFill(Color.WHITE);
+        Label abtText = new Label(
+            "ABOUT\n\n" +
+            "THIS IS THE FINAL OUTPUT OF GROUP 5 FOR COMPROG 2\n\n" +
+            "GR5 MEMBERS:\n" +
+            "1. ANTHONY LUMANTAO\n" +
+            "2. MARC KEN LUZAME\n" +
+            "3. CHRISTIAN TORRELINO\n" +
+            "4. JOHN DENVER DIEGO\n" +
+            "5. REIGNSTER RODRIGUEZ"
+        );
+        //gives the about section a label for css
+        abtText.getStyleClass().add("about-text");
 
         Button backBtn2 = new Button("Back");
         backBtn2.setOnAction(e -> stage.setScene(previousScene));
@@ -122,6 +132,10 @@ public class menuUI {
         background.setPreserveRatio(false);
 
         StackPane root = new StackPane(background, abt);
+
+        //finds the css file for the about section to use
+        root.getStylesheets().add(menuUI.class.getResource("/MainTimeline/style.css").toExternalForm());
+
         return new Scene(root, 720, 720);
     }
 
