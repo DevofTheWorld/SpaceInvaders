@@ -1,10 +1,18 @@
 
-/* Title Section */
+/* Title Design po */
 .game-title {
     -fx-font-size: 70px;
-    -fx-font-family: "Courier New"; 
+    -fx-font-family: "Impact"; 
     -fx-font-weight: bold;
-    -fx-text-fill: #f30303; 
-    -fx-effect: dropshadow(gaussian, #a03105f6, 15, 0.5, 0, 0); 
+    -fx-text-fill: #5ccece; 
+    -fx-effect: dropshadow(gaussian, #05adad, 15, 0.5, 0, 0); 
     -fx-padding: 30;
+}
+
+.about-text {
+    -fx-font-family: "OCR A Extended";
+    -fx-font-size: 18px;
+    -fx-text-fill: #ffffff; 
+    -fx-effect: dropshadow(gaussian, #00ffff, 15, 0.5, 0, 0);
+    -fx-text-alignment: center;
 }
