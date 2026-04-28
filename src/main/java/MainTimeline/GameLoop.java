@@ -39,7 +39,7 @@ public class GameLoop {
                 boolean moving = dx != 0 || dy != 0;
                 player.move(dx, dy, moving, now);
 
-                // --- player bullets ---
+                //player bullets
                 bullets.getBullets().removeIf(b -> {
                     if (b.getTranslateY() < -20) {
                         bullets.getRoot().getChildren().remove(b);
@@ -54,11 +54,11 @@ public class GameLoop {
 
                 bullets.updateBullets(now);
 
-                // --- enemies + enemy bullets ---
+                //enemies + enemy bullets
                 spawner.update(now, player.getX());
 
-                // --- asteroids ---
-                asteroidSpawner.update(now); // add
+                //asteroids
+                asteroidSpawner.update(now);
             }
         };
 

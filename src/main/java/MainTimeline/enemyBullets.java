@@ -26,7 +26,7 @@ public class enemyBullets {
             bullet.setPreserveRatio(true);
 
             bullet.setTranslateX(enemyX + 14);
-            bullet.setTranslateY(enemyY + 30); // spawn just below enemy
+            bullet.setTranslateY(enemyY + 30); //spawn just below enemy
 
             bullets.add(bullet);
             root.getChildren().add(bullet);
@@ -34,7 +34,7 @@ public class enemyBullets {
 
         public void update() {
             bullets.removeIf(b -> {
-                if (b.getTranslateY() > 740) { // off bottom of screen
+                if (b.getTranslateY() > 740) {
                     root.getChildren().remove(b);
                     return true;
                 }
