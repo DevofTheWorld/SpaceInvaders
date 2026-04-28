@@ -2,23 +2,25 @@ package MainTimeline;
 
 import javafx.animation.AnimationTimer;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.Pane;
 
 public class GameLoop {
 
     private Control control;
     private Player player;
     private playerBullets bullets;
-    private enemySpawner spawner;      // add
-    private enemyBullets enemyBullets; // add
+    private enemySpawner spawner;
+    private enemyBullets enemyBullets;
+    private asteroidSpawner asteroidSpawner; // add
 
     public GameLoop(Player player, Control control, playerBullets bullets,
-                    enemySpawner spawner, enemyBullets enemyBullets) {
+                    enemySpawner spawner, enemyBullets enemyBullets,
+                    asteroidSpawner asteroidSpawner) { // add
         this.player = player;
         this.control = control;
         this.bullets = bullets;
         this.spawner = spawner;
         this.enemyBullets = enemyBullets;
+        this.asteroidSpawner = asteroidSpawner; // add
     }
 
     public void start() {
@@ -53,7 +55,10 @@ public class GameLoop {
                 bullets.updateBullets(now);
 
                 // --- enemies + enemy bullets ---
-                spawner.update(now, player.getX()); // pass player X
+                spawner.update(now, player.getX());
+
+                // --- asteroids ---
+                asteroidSpawner.update(now); // add
             }
         };
 
