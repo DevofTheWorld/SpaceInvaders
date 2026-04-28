@@ -15,6 +15,7 @@ public class Player {
     private Image frameRight;
     private Image frameLeft;
 
+
     public Player(ImageView sprite, double startX, double startY) {
         this.sprite = sprite;
         this.x = startX;
@@ -22,6 +23,10 @@ public class Player {
 
         sprite.setTranslateX(x);
         sprite.setTranslateY(y);
+
+        sprite.setScaleX(1.5);
+        sprite.setScaleY(1.5);
+        sprite.setSmooth(false);
 
         frameIdle  = new Image(getClass().getResource("/animation/enemy1.png").toExternalForm());
         frameRight = new Image(getClass().getResource("/animation/enemy2.png").toExternalForm());
@@ -52,5 +57,12 @@ public class Player {
         } else {
             sprite.setImage(frameIdle);
         }
+    }
+    public ImageView getSprite() {
+        return sprite;
+    }
+
+    public double getX() {
+        return x;
     }
 }
