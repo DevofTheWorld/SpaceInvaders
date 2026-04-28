@@ -28,7 +28,6 @@ public class playerBullets {
     public void shoot() {
         ImageView bullet = new ImageView(frame1); // start on frame 1
 
-
         bullet.setFitWidth(8);
         bullet.setPreserveRatio(true);
         bullet.setSmooth(false);
@@ -54,6 +53,9 @@ public class playerBullets {
         return bullets;
     }
 
+    public List<Long> getSpawnTimes() {
+    return spawnTimes;
+    }
     public Pane getRoot() {
         return root;
     }

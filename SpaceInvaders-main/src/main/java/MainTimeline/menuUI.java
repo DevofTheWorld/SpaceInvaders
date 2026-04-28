@@ -20,25 +20,61 @@ public class menuUI {
     private static ProgressBar loadBar;
 
     protected static Scene createLoadingScene() {
-
         Label loadLabel = new Label("Loading...");
         loadBar = new ProgressBar(0);
 
         VBox loadingRoot = new VBox(10, loadLabel, loadBar);
         loadingRoot.setAlignment(Pos.CENTER);
 
-        Image bgImg = new Image("/animatedbackground.gif");
+        Image bgImg = new Image(menuUI.class.getResource("/animatedbackground.gif").toExternalForm());
         ImageView background = new ImageView(bgImg);
         background.setFitHeight(720);
         background.setFitWidth(720);
 
         StackPane root = new StackPane(background, loadingRoot);
-
         return new Scene(root, 720, 720);
     }
 
-    public static void loadGame(Stage stage, Scene menuScene) {
+    public static Scene createMenuScene(Stage stage) {
+        VBox menuBox = new VBox();
+        menuBox.setAlignment(Pos.CENTER);
+        menuBox.setSpacing(30);
 
+        Label titleLabel = new Label("SPACE INVADERS");
+        titleLabel.getStyleClass().add("game-title");
+
+        Image bgImg = new Image(menuUI.class.getResource("/animatedbackground.gif").toExternalForm());
+        ImageView background = new ImageView(bgImg);
+        background.setFitWidth(720);
+        background.setFitHeight(720);
+
+        StackPane menuRoot = new StackPane(background, menuBox);
+        Scene menuScene = new Scene(menuRoot, 720, 720);
+        menuScene.getStylesheets().add(menuUI.class.getResource("style.css").toExternalForm());
+
+        Button startBtn = new Button("Start Game");
+        Button aboutBtn = new Button("About");
+        Button instBtn = new Button("Instructions");
+        Button exitBtn = new Button("Exit");
+
+        menuUI ui = new menuUI();
+
+        startBtn.setOnAction(e -> {
+            Scene loadingScene = menuUI.createLoadingScene();
+            stage.setScene(loadingScene);
+            menuUI.loadGame(stage, menuScene);
+        });
+
+        menuBox.getChildren().addAll(titleLabel, startBtn, aboutBtn, instBtn, exitBtn);
+
+        aboutBtn.setOnAction(e -> stage.setScene(ui.abtBtn(stage, menuScene)));
+        instBtn.setOnAction(e -> stage.setScene(ui.instructionBtn(stage, menuScene)));
+        exitBtn.setOnAction(e -> System.exit(0));
+
+        return menuScene;
+    }
+
+    public static void loadGame(Stage stage, Scene menuScene) {
         Task<Void> task = new Task<>() {
             @Override
             protected Void call() throws Exception {
@@ -52,35 +88,38 @@ public class menuUI {
 
         loadBar.progressProperty().bind(task.progressProperty());
 
-        // When loading finishes, switch to the actual game
         task.setOnSucceeded(e -> {
-            Scene gameScene = startGame(stage, menuScene);
-            stage.setScene(gameScene);
+            try {
+                Scene gameScene = startGame(stage, menuScene);
+                stage.setScene(gameScene);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         });
 
-        new Thread(task).start();
+        task.setOnFailed(e -> task.getException().printStackTrace());
+
+        Thread thread = new Thread(task);
+        thread.setDaemon(true);
+        thread.start();
     }
 
     protected static Scene startGame(Stage stage, Scene previousScene) {
-
-        // Use Pane instead of StackPane — positions everything by TranslateX/Y correctly
         Pane gameRoot = new Pane();
         Scene gameScene = new Scene(gameRoot, 720, 720);
 
-        // Background — add it first so it's behind everything
         Image bgImg = new Image(menuUI.class.getResource("/animatedbackground.gif").toExternalForm());
         ImageView background = new ImageView(bgImg);
         background.setFitWidth(720);
         background.setFitHeight(720);
         gameRoot.getChildren().add(background);
 
-        // Player sprite — make sure this is YOUR player image, not the enemy
         ImageView playerSprite = new ImageView(
-                new Image(menuUI.class.getResource("/enemy1.png").toExternalForm())
+                new Image(menuUI.class.getResource("/animation/enemy1.png").toExternalForm())
         );
         gameRoot.getChildren().add(playerSprite);
 
-        Player player = new Player(playerSprite, 360, 600); // start near bottom center
+        Player player = new Player(playerSprite, 360, 600);
         Control control = new Control();
 
         playerBullets bullets = new playerBullets(player, gameRoot);
@@ -88,9 +127,9 @@ public class menuUI {
 
         enemyBullets enemyBullets = new enemyBullets(gameRoot);
         enemySpawner spawner = new enemySpawner(gameRoot, enemyBullets);
-        asteroidSpawner asteroidSpawner = new asteroidSpawner(gameRoot); // add
+        asteroidSpawner asteroidSpawner = new asteroidSpawner(gameRoot);
 
-        GameLoop loop = new GameLoop(player, control, bullets, spawner, enemyBullets, asteroidSpawner); // add
+        GameLoop loop = new GameLoop(player, control, bullets, spawner, enemyBullets, asteroidSpawner, gameRoot, stage);
         loop.start();
 
         Platform.runLater(() -> {
@@ -102,7 +141,6 @@ public class menuUI {
     }
 
     protected static Scene abtBtn(Stage stage, Scene previousScene) {
-
         VBox abt = new VBox();
         abt.setSpacing(15);
         abt.setAlignment(Pos.CENTER);
@@ -115,7 +153,7 @@ public class menuUI {
 
         abt.getChildren().addAll(abtText, backBtn2);
 
-        Image bgImg = new Image("/animatedbackground.gif");
+        Image bgImg = new Image(menuUI.class.getResource("/animatedbackground.gif").toExternalForm());
         ImageView background = new ImageView(bgImg);
         background.setFitHeight(720);
         background.setFitWidth(720);
@@ -126,7 +164,6 @@ public class menuUI {
     }
 
     protected static Scene instructionBtn(Stage stage, Scene previousScene) {
-
         VBox instrct = new VBox();
         instrct.setSpacing(15);
         instrct.setAlignment(Pos.CENTER);
@@ -139,7 +176,7 @@ public class menuUI {
 
         instrct.getChildren().addAll(instText, instBtn2);
 
-        Image bgImg = new Image("/animatedbackground.gif");
+        Image bgImg = new Image(menuUI.class.getResource("/animatedbackground.gif").toExternalForm());
         ImageView background = new ImageView(bgImg);
         background.setFitHeight(720);
         background.setFitWidth(720);

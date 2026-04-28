@@ -10,6 +10,7 @@ public class enemy {
     private double x;
     private double y;
     private double speed = 1.5;
+    private int health = 3;
 
     public enemy(Pane root) {
         Image img = new Image(enemy.class.getResource("/gray3.png").toExternalForm());
@@ -33,6 +34,22 @@ public class enemy {
 
         sprite.setTranslateX(x);
         sprite.setTranslateY(y);
+    }
+
+    // returns true if enemy is dead
+    public boolean takeDamage() {
+        health--;
+        // flash white to show hit
+        sprite.setOpacity(0.4);
+        new Thread(() -> {
+            try { Thread.sleep(80); } catch (InterruptedException ignored) {}
+            javafx.application.Platform.runLater(() -> sprite.setOpacity(1.0));
+        }).start();
+        return health <= 0;
+    }
+
+    public boolean collidesWith(ImageView other) {
+        return sprite.getBoundsInParent().intersects(other.getBoundsInParent());
     }
 
     public double getX() { return x; }

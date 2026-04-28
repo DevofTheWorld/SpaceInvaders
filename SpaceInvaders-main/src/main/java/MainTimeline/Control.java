@@ -8,6 +8,7 @@ public class Control {
     boolean downPressed = false;
     boolean leftPressed = false;
     boolean rightPressed = false;
+    boolean dashPressed = false;
 
     private playerBullets bullets;
 
@@ -23,8 +24,9 @@ public class Control {
                 case S -> downPressed = true;
                 case A -> leftPressed = true;
                 case D -> rightPressed = true;
+                case Q -> dashPressed = true;
                 case SPACE -> {
-                    if (bullets != null) bullets.shoot(); // shoot
+                    if (bullets != null) bullets.shoot();
                 }
             }
         });
@@ -35,6 +37,7 @@ public class Control {
                 case S -> downPressed = false;
                 case A -> leftPressed = false;
                 case D -> rightPressed = false;
+                case Q -> dashPressed = false;
             }
         });
     }
