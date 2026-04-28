@@ -6,7 +6,6 @@ import javafx.scene.layout.Pane;
 
 public class spaceDebris {
 
-    //new
     private ImageView sprite;
     private double x;
     private double y;
@@ -25,10 +24,9 @@ public class spaceDebris {
         x = 20 + Math.random() * 680;
         y = -50;
 
-        //random fall speed and drift
-        speedY = 1.5 + Math.random() * 2.0;
-        speedX = (Math.random() - 0.5) * 1.5;
-        rotationSpeed = (Math.random() - 0.5) * 4;
+        speedY = 4.0 + Math.random() * 3.0;
+        speedX = (Math.random() - 0.5) * 3.0;
+        rotationSpeed = (Math.random() - 0.5) * 6;
 
         sprite.setTranslateX(x);
         sprite.setTranslateY(y);
@@ -40,7 +38,6 @@ public class spaceDebris {
         x += speedX;
         y += speedY;
 
-        // spin the asteroid every frame
         rotation += rotationSpeed;
         sprite.setRotate(rotation);
 
