@@ -9,6 +9,7 @@ public class Control {
     boolean leftPressed = false;
     boolean rightPressed = false;
     boolean dashPressed = false;
+    boolean fireHeld = false; // tracks if space is being held
 
     private playerBullets bullets;
 
@@ -25,9 +26,7 @@ public class Control {
                 case A -> leftPressed = true;
                 case D -> rightPressed = true;
                 case Q -> dashPressed = true;
-                case SPACE -> {
-                    if (bullets != null) bullets.shoot();
-                }
+                case SPACE -> fireHeld = true;
             }
         });
 
@@ -38,6 +37,7 @@ public class Control {
                 case A -> leftPressed = false;
                 case D -> rightPressed = false;
                 case Q -> dashPressed = false;
+                case SPACE -> fireHeld = false;
             }
         });
     }

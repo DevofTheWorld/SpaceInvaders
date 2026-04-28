@@ -25,6 +25,9 @@ public class GameLoop {
     private Label healthLabel;
     private Stage stage;
 
+    private long lastFireTime = 0;
+    private static final long FIRE_RATE = 300_000_000L; // 0.3 seconds
+
     public GameLoop(Player player, Control control, playerBullets bullets,
                     enemySpawner spawner, enemyBullets enemyBullets,
                     asteroidSpawner asteroidSpawner, Pane gameRoot, Stage stage) {
@@ -49,7 +52,7 @@ public class GameLoop {
         int hp = player.getHealth();
         StringBuilder hearts = new StringBuilder();
         for (int i = 0; i < player.maxHealth; i++) {
-            hearts.append(i < hp ? "❤ " : "♡");
+            hearts.append(i < hp ? "❤ " : "♡ ");
         }
         healthLabel.setText(hearts.toString().trim());
     }
@@ -76,6 +79,12 @@ public class GameLoop {
 
                 boolean moving = dx != 0 || dy != 0;
                 player.move(dx, dy, moving, now);
+
+                // auto fire while space held
+                if (control.fireHeld && now - lastFireTime >= FIRE_RATE) {
+                    bullets.shoot();
+                    lastFireTime = now;
+                }
 
                 updateHealthDisplay();
 
@@ -107,28 +116,28 @@ public class GameLoop {
                 for (ImageView b : bullets.getBullets()) {
                     for (enemy e : spawner.getEnemies()) {
                         if (b.getBoundsInParent().intersects(e.getSprite().getBoundsInParent())) {
-                            bulletHits.add(b);       // remove the bullet
+                            bulletHits.add(b);
                             boolean died = e.takeDamage();
-                            if (died) killedEnemies.add(e); // remove enemy if out of health
-                            break; // one bullet hits one enemy only
+                            if (died) killedEnemies.add(e);
+                            break;
                         }
                     }
                 }
 
                 for (ImageView b : bulletHits) {
-                int index = bullets.getBullets().indexOf(b);
-                if (index >= 0) {
-                    bullets.getSpawnTimes().remove(index);
-                    bullets.getBullets().remove(index);
+                    int index = bullets.getBullets().indexOf(b);
+                    if (index >= 0) {
+                        bullets.getSpawnTimes().remove(index);
+                        bullets.getBullets().remove(index);
                     }
-                gameRoot.getChildren().remove(b);
+                    gameRoot.getChildren().remove(b);
                 }
-                
+
                 for (enemy e : killedEnemies) {
                     spawner.removeEnemy(e);
                 }
 
-                // asteroid collision with player
+                // asteroid collision with player 
                 List<spaceDebris> asteroidsToRemove = new ArrayList<>();
                 for (spaceDebris a : asteroidSpawner.getAsteroids()) {
                     if (a.getSprite().getBoundsInParent()
