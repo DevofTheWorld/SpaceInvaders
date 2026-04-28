@@ -115,7 +115,7 @@ public class Player {
         sprite.setTranslateX(x);
         sprite.setTranslateY(y);
 
-        // invincibility flicker
+        // invincibility
         if (invincible) {
             long elapsed = now - invincibleTimer;
             if (elapsed > INVINCIBLE_DURATION) {

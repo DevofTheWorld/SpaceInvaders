@@ -1,8 +1,11 @@
 package MainTimeline;
 
 import javafx.animation.AnimationTimer;
+import javafx.animation.Timeline;
+import javafx.animation.KeyFrame;
+import javafx.util.Duration;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -22,15 +25,21 @@ public class GameLoop {
     private enemyBullets enemyBullets;
     private asteroidSpawner asteroidSpawner;
     private Pane gameRoot;
-    private Label healthLabel;
+    private List<ImageView> heartIcons = new ArrayList<>();
+    private Image heartFull;
+    private Image heartTwoThirds;
+    private Image heartOneThird;
+    private Image heartEmpty;
     private Stage stage;
+    private javafx.scene.media.MediaPlayer mediaPlayer;
 
     private long lastFireTime = 0;
-    private static final long FIRE_RATE = 300_000_000L; // 0.3 seconds
+    private static final long FIRE_RATE = 200_000_000L; // 0.2 seconds
 
     public GameLoop(Player player, Control control, playerBullets bullets,
                     enemySpawner spawner, enemyBullets enemyBullets,
-                    asteroidSpawner asteroidSpawner, Pane gameRoot, Stage stage) {
+                    asteroidSpawner asteroidSpawner, Pane gameRoot, Stage stage,
+                    javafx.scene.media.MediaPlayer mediaPlayer) {
         this.player = player;
         this.control = control;
         this.bullets = bullets;
@@ -39,22 +48,31 @@ public class GameLoop {
         this.asteroidSpawner = asteroidSpawner;
         this.gameRoot = gameRoot;
         this.stage = stage;
+        this.mediaPlayer = mediaPlayer;
 
-        healthLabel = new Label("❤ ❤ ❤");
-        healthLabel.setTextFill(Color.WHITE);
-        healthLabel.setStyle("-fx-font-size: 22px;");
-        healthLabel.setTranslateX(10);
-        healthLabel.setTranslateY(10);
-        gameRoot.getChildren().add(healthLabel);
+        heartFull      = new Image(GameLoop.class.getResource("/ui/heartFull.png").toExternalForm());
+        heartTwoThirds = new Image(GameLoop.class.getResource("/ui/heartTwoThirds.png").toExternalForm());
+        heartOneThird  = new Image(GameLoop.class.getResource("/ui/heartOneThird.png").toExternalForm());
+        heartEmpty     = new Image(GameLoop.class.getResource("/ui/heartEmpty.png").toExternalForm());
+
+        ImageView heart = new ImageView(heartFull);
+        heart.setFitWidth(96);
+        heart.setFitHeight(96);
+        heart.setTranslateX(25);
+        heart.setTranslateY(5);
+        heartIcons.add(heart);
+        gameRoot.getChildren().add(heart);
     }
 
     private void updateHealthDisplay() {
         int hp = player.getHealth();
-        StringBuilder hearts = new StringBuilder();
-        for (int i = 0; i < player.maxHealth; i++) {
-            hearts.append(i < hp ? "❤ " : "♡ ");
-        }
-        healthLabel.setText(hearts.toString().trim());
+        Image img;
+        if (hp >= 3)      img = heartFull;
+        else if (hp == 2) img = heartTwoThirds;
+        else if (hp == 1) img = heartOneThird;
+        else              img = heartEmpty;
+
+        heartIcons.get(0).setImage(img);
     }
 
     public void start() {
@@ -67,9 +85,9 @@ public class GameLoop {
 
                 // player movement
                 double dx = 0, dy = 0;
-                if (control.upPressed) dy -= 1;
-                if (control.downPressed) dy += 1;
-                if (control.leftPressed) dx -= 1;
+                if (control.upPressed)    dy -= 1;
+                if (control.downPressed)  dy += 1;
+                if (control.leftPressed)  dx -= 1;
                 if (control.rightPressed) dx += 1;
 
                 if (control.dashPressed) {
@@ -80,7 +98,7 @@ public class GameLoop {
                 boolean moving = dx != 0 || dy != 0;
                 player.move(dx, dy, moving, now);
 
-                // auto fire while space held
+                // auto fire
                 if (control.fireHeld && now - lastFireTime >= FIRE_RATE) {
                     bullets.shoot();
                     lastFireTime = now;
@@ -110,8 +128,8 @@ public class GameLoop {
                 asteroidSpawner.update(now);
 
                 // player bullets hitting enemies
-                List<ImageView> bulletHits = new ArrayList<>();
-                List<enemy> killedEnemies = new ArrayList<>();
+                List<ImageView> bulletHits    = new ArrayList<>();
+                List<enemy>     killedEnemies = new ArrayList<>();
 
                 for (ImageView b : bullets.getBullets()) {
                     for (enemy e : spawner.getEnemies()) {
@@ -175,7 +193,7 @@ public class GameLoop {
                     spawner.removeEnemy(e);
                 }
 
-                // --- enemy bullet collision with player ---
+                // enemy bullet collision with player
                 List<ImageView> bulletsToRemove = new ArrayList<>();
                 for (ImageView eb : enemyBullets.getBullets()) {
                     if (eb.getBoundsInParent()
@@ -201,38 +219,71 @@ public class GameLoop {
     }
 
     private void showGameOver() {
+        double startVolume = mediaPlayer.getVolume();
+        int steps = 40;
+        Timeline fadeOut = new Timeline();
+        for (int i = 1; i <= steps; i++) {
+            final double t = (double) i / steps;
+            KeyFrame kf = new KeyFrame(
+                Duration.millis(i * 50),
+                e -> {
+                    mediaPlayer.setVolume(startVolume * (1.0 - t));
+                    mediaPlayer.setRate(1.0 - (0.85 * t));
+                }
+            );
+            fadeOut.getKeyFrames().add(kf);
+        }
+
+        fadeOut.setOnFinished(e -> {
+            mediaPlayer.stop();
+            mediaPlayer.setRate(0.85);
+            mediaPlayer.setVolume(0.15);
+            mediaPlayer.play();
+        });
+
+        fadeOut.play();
+
         javafx.scene.shape.Rectangle overlay = new javafx.scene.shape.Rectangle(720, 720);
-        overlay.setFill(Color.color(0, 0, 0, 0.6));
+        overlay.setFill(Color.color(0.1, 0, 0, 0.75));
         gameRoot.getChildren().add(overlay);
 
-        Label gameOverLabel = new Label("GAME OVER");
-        gameOverLabel.setTextFill(Color.RED);
-        gameOverLabel.setStyle("-fx-font-size: 48px; -fx-font-weight: bold;");
+        Image gameOverImg = new Image(GameLoop.class.getResource("/ui/gameOver.png").toExternalForm());
+        ImageView gameOverLabel = new ImageView(gameOverImg);
+        gameOverLabel.setFitWidth(400);
+        gameOverLabel.setPreserveRatio(true);
 
+        // play again button 
         Button replayBtn = new Button("Play Again");
         replayBtn.setStyle(
                 "-fx-font-size: 18px;" +
-                        "-fx-background-color: white;" +
-                        "-fx-text-fill: black;" +
-                        "-fx-padding: 10 30 10 30;" +
-                        "-fx-cursor: hand;"
+                "-fx-background-color: white;" +
+                "-fx-text-fill: black;" +
+                "-fx-padding: 10 30 10 30;" +
+                "-fx-cursor: hand;"
         );
         replayBtn.setOnAction(e -> {
+            mediaPlayer.stop();
+            mediaPlayer.setRate(1.0);
+            mediaPlayer.setVolume(0.5);
             javafx.scene.Scene newGame = menuUI.startGame(stage, null);
             stage.setScene(newGame);
         });
 
+        // main menu button 
         Button menuBtn = new Button("Main Menu");
         menuBtn.setStyle(
                 "-fx-font-size: 18px;" +
-                        "-fx-background-color: transparent;" +
-                        "-fx-text-fill: white;" +
-                        "-fx-border-color: white;" +
-                        "-fx-border-width: 1px;" +
-                        "-fx-padding: 10 30 10 30;" +
-                        "-fx-cursor: hand;"
+                "-fx-background-color: transparent;" +
+                "-fx-text-fill: white;" +
+                "-fx-border-color: white;" +
+                "-fx-border-width: 1px;" +
+                "-fx-padding: 10 30 10 30;" +
+                "-fx-cursor: hand;"
         );
         menuBtn.setOnAction(e -> {
+            mediaPlayer.stop();
+            mediaPlayer.setRate(1.0);
+            mediaPlayer.setVolume(0.5);
             javafx.scene.Scene menuScene = menuUI.createMenuScene(stage);
             stage.setScene(menuScene);
         });
@@ -243,6 +294,6 @@ public class GameLoop {
         gameOverBox.setPrefHeight(720);
 
         gameRoot.getChildren().add(gameOverBox);
-        healthLabel.setText("♡ ♡ ♡");
+        heartIcons.get(0).setImage(heartEmpty);
     }
 }
