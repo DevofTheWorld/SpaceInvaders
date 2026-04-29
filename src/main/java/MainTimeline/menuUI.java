@@ -1,14 +1,16 @@
 package MainTimeline;
 
+import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -20,13 +22,53 @@ public class menuUI {
 
     private static ProgressBar loadBar;
 
-    protected static Scene createLoadingScene() {
-        Label loadLabel = new Label("INITIALIZING SYSTEM...");
-        loadLabel.setTextFill(Color.LIMEGREEN);
-        loadBar = new ProgressBar(0);
-        loadBar.setPrefWidth(300);
+    private static javafx.scene.media.MediaPlayer mediaPlayer;
 
-        VBox loadingRoot = new VBox(20, loadLabel, loadBar);
+    private static ImageView makeImageButton(String path, double width) {
+        Image img = new Image(menuUI.class.getResource(path).toExternalForm());
+        ImageView btn = new ImageView(img);
+        btn.setFitWidth(width);
+        btn.setPreserveRatio(true);
+        btn.setCursor(javafx.scene.Cursor.HAND);
+
+        btn.addEventHandler(MouseEvent.MOUSE_ENTERED,  e -> btn.setOpacity(0.8));
+        btn.addEventHandler(MouseEvent.MOUSE_EXITED,   e -> btn.setOpacity(1.0));
+        btn.addEventHandler(MouseEvent.MOUSE_PRESSED,  e -> btn.setOpacity(0.6));
+        btn.addEventHandler(MouseEvent.MOUSE_RELEASED, e -> btn.setOpacity(1.0));
+
+        return btn;
+    }
+
+    private static void ensureMusicPlaying() {
+        if (mediaPlayer == null) {
+            javafx.scene.media.Media bgm = new javafx.scene.media.Media(
+                    menuUI.class.getResource("/bgm.mp3").toExternalForm()
+            );
+            mediaPlayer = new javafx.scene.media.MediaPlayer(bgm);
+            mediaPlayer.setCycleCount(javafx.scene.media.MediaPlayer.INDEFINITE);
+            mediaPlayer.setVolume(0.5);
+            mediaPlayer.setRate(1.0);
+        } else {
+            mediaPlayer.setRate(1.0);
+            mediaPlayer.setVolume(0.5);
+        }
+
+        if (mediaPlayer.getStatus() != javafx.scene.media.MediaPlayer.Status.PLAYING) {
+            mediaPlayer.play();
+        }
+    }
+
+    protected static Scene createLoadingScene() {
+        Image loadingTextImg = new Image(menuUI.class.getResource("/ui/loading.png").toExternalForm());
+        ImageView loadingText = new ImageView(loadingTextImg);
+        loadingText.setFitWidth(200);
+        loadingText.setPreserveRatio(true);
+
+        loadBar = new ProgressBar(0);
+        loadBar.setPrefWidth(400);
+        loadBar.setPrefHeight(30);
+
+        VBox loadingRoot = new VBox(10, loadingText, loadBar);
         loadingRoot.setAlignment(Pos.CENTER);
 
         Image bgImg = new Image(menuUI.class.getResource("/animatedbackground.gif").toExternalForm());
@@ -39,12 +81,52 @@ public class menuUI {
     }
 
     public static Scene createMenuScene(Stage stage) {
+
+        // music starts here on first launch, resumes/resets on return
+        ensureMusicPlaying();
+
+        // animated title
+        Image titleImg1 = new Image(menuUI.class.getResource("/ui/title.png").toExternalForm());
+        Image titleImg2 = new Image(menuUI.class.getResource("/ui/title2.png").toExternalForm());
+        ImageView titleLabel = new ImageView(titleImg1);
+        titleLabel.setFitWidth(600);
+        titleLabel.setPreserveRatio(true);
+
+        long[] lastSwap = {0};
+        boolean[] showingFirst = {true};
+
+        AnimationTimer titleAnim = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                if (now - lastSwap[0] >= 500_000_000L) {
+                    titleLabel.setImage(showingFirst[0] ? titleImg2 : titleImg1);
+                    showingFirst[0] = !showingFirst[0];
+                    lastSwap[0] = now;
+                }
+            }
+        };
+        titleAnim.start();
+
+        // buttons
+        ImageView startBtn = makeImageButton("/ui/btnStart.png",        230);
+        ImageView aboutBtn = makeImageButton("/ui/btnAbout.png",        230);
+        ImageView instBtn  = makeImageButton("/ui/btnInstructions.png", 230);
+        ImageView exitBtn  = makeImageButton("/ui/btnExit.png",         230);
+
+        // title box
+        VBox titleBox = new VBox(titleLabel);
+        titleBox.setAlignment(Pos.CENTER);
+        titleBox.setPadding(new Insets(250, 0, 0, 0));
+
+        // button box
+        VBox buttonBox = new VBox(10, startBtn, aboutBtn, instBtn, exitBtn);
+        buttonBox.setAlignment(Pos.CENTER);
+        buttonBox.setPadding(new Insets(35, 0, 200, 0));
+
         VBox menuBox = new VBox();
         menuBox.setAlignment(Pos.CENTER);
-        menuBox.setSpacing(20);
-
-        Label titleLabel = new Label("SPACE INVADERS");
-        titleLabel.getStyleClass().add("game-title");
+        menuBox.setSpacing(15);
+        menuBox.getChildren().addAll(titleBox, buttonBox);
 
         Image bgImg = new Image(menuUI.class.getResource("/animatedbackground.gif").toExternalForm());
         ImageView background = new ImageView(bgImg);
@@ -64,18 +146,26 @@ public class menuUI {
         StackPane menuRoot = new StackPane(background, menuBox);
         Scene menuScene = new Scene(menuRoot, 720, 720);
 
-        String css = menuUI.class.getResource("style.css").toExternalForm();
-        menuScene.getStylesheets().add(css);
+        menuUI ui = new menuUI();
 
-        startBtn.setOnAction(e -> {
-            stage.setScene(createLoadingScene());
-            loadGame(stage, menuScene);
+        startBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
+            titleAnim.stop();
+            Scene loadingScene = menuUI.createLoadingScene();
+            stage.setScene(loadingScene);
+            menuUI.loadGame(stage, menuScene);
         });
 
-        menuUI ui = new menuUI();
-        aboutBtn.setOnAction(e -> stage.setScene(ui.abtBtn(stage, menuScene)));
-        instBtn.setOnAction(e -> stage.setScene(ui.instructionBtn(stage, menuScene)));
-        exitBtn.setOnAction(e -> System.exit(0));
+        aboutBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
+            titleAnim.stop();
+            stage.setScene(ui.abtBtn(stage, menuScene));
+        });
+
+        instBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
+            titleAnim.stop();
+            stage.setScene(ui.instructionBtn(stage, menuScene));
+        });
+
+        exitBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> System.exit(0));
 
         menuBox.getChildren().addAll(titleLabel, startBtn, instBtn, aboutBtn, exitBtn);
 
@@ -125,17 +215,16 @@ public class menuUI {
         );
         gameRoot.getChildren().add(playerSprite);
 
-        Player player = new Player(playerSprite, 360, 600);
-        Control control = new Control();
-
-        playerBullets bullets = new playerBullets(player, gameRoot);
+        Player player                   = new Player(playerSprite, 360, 600);
+        Control control                 = new Control();
+        playerBullets bullets           = new playerBullets(player, gameRoot);
         control.setBullets(bullets);
-
-        enemyBullets enemyBullets = new enemyBullets(gameRoot);
-        enemySpawner spawner = new enemySpawner(gameRoot, enemyBullets);
+        enemyBullets enemyBullets       = new enemyBullets(gameRoot);
+        enemySpawner spawner            = new enemySpawner(gameRoot, enemyBullets);
         asteroidSpawner asteroidSpawner = new asteroidSpawner(gameRoot);
 
-        GameLoop loop = new GameLoop(player, control, bullets, spawner, enemyBullets, asteroidSpawner, gameRoot, stage);
+        GameLoop loop = new GameLoop(player, control, bullets, spawner, enemyBullets,
+                asteroidSpawner, gameRoot, stage, mediaPlayer);
         loop.start();
 
         Platform.runLater(() -> {
@@ -147,26 +236,15 @@ public class menuUI {
     }
 
     protected static Scene abtBtn(Stage stage, Scene previousScene) {
-        VBox abt = new VBox(15);
+        VBox abt = new VBox();
+        abt.setSpacing(15);
         abt.setAlignment(Pos.CENTER);
 
-        Label abtText = new Label(
-                "--- PROJECT INFO ---\n\n" +
-                        "THIS IS THE FINAL OUTPUT OF GROUP 5\n" +
-                        "FOR COMPUTER PROGRAMMING 2\n\n" +
-                        "DEVELOPERS:\n" +
-                        "• ANTHONY LUMANTAO\n" +
-                        "• MARC KEN LUZAME\n" +
-                        "• CHRISTIAN TORRELINO\n" +
-                        "• JOHN DENVER DIEGO\n" +
-                        "• REIGNSTER RODRIGUEZ"
-        );
-        abtText.getStyleClass().add("about-text");
-        abtText.setTextAlignment(TextAlignment.CENTER);
+        Label abtText = new Label("The final output of Group 5 for Comprog 2");
         abtText.setTextFill(Color.WHITE);
 
-        Button backBtn = new Button("BACK TO MENU");
-        backBtn.setOnAction(e -> stage.setScene(previousScene));
+        ImageView backBtn2 = makeImageButton("/ui/btnBack.png", 200);
+        backBtn2.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> stage.setScene(previousScene));
 
         abt.getChildren().addAll(abtText, backBtn);
 
@@ -176,10 +254,7 @@ public class menuUI {
         background.setFitWidth(720);
 
         StackPane root = new StackPane(background, abt);
-        Scene scene = new Scene(root, 720, 720);
-        scene.getStylesheets().add(menuUI.class.getResource("style.css").toExternalForm());
-
-        return scene;
+        return new Scene(root, 720, 720);
     }
 
     protected static Scene instructionBtn(Stage stage, Scene previousScene) {
@@ -204,8 +279,8 @@ public class menuUI {
         instText.setTextFill(Color.WHITE);
         instText.setStyle("-fx-font-size: 16px; -fx-line-spacing: 5px;");
 
-        Button backBtn = new Button("BACK TO MENU");
-        backBtn.setOnAction(e -> stage.setScene(previousScene));
+        ImageView instBtn2 = makeImageButton("/ui/btnBack.png", 200);
+        instBtn2.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> stage.setScene(previousScene));
 
         instrct.getChildren().addAll(instTitle, instText, backBtn);
 
