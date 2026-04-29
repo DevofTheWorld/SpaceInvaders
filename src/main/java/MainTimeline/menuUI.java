@@ -16,6 +16,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.scene.paint.Color;
+import javafx.scene.text.TextAlignment;
 
 public class menuUI {
 
@@ -132,9 +133,18 @@ public class menuUI {
         background.setFitWidth(720);
         background.setFitHeight(720);
 
+        Button startBtn = new Button("START GAME");
+        Button instBtn = new Button("INSTRUCTIONS");
+        Button aboutBtn = new Button("ABOUT");
+        Button exitBtn = new Button("EXIT");
+
+        startBtn.setPrefWidth(200);
+        instBtn.setPrefWidth(200);
+        aboutBtn.setPrefWidth(200);
+        exitBtn.setPrefWidth(200);
+
         StackPane menuRoot = new StackPane(background, menuBox);
         Scene menuScene = new Scene(menuRoot, 720, 720);
-        menuScene.getStylesheets().add(menuUI.class.getResource("style.css").toExternalForm());
 
         menuUI ui = new menuUI();
 
@@ -156,6 +166,8 @@ public class menuUI {
         });
 
         exitBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> System.exit(0));
+
+        menuBox.getChildren().addAll(titleLabel, startBtn, instBtn, aboutBtn, exitBtn);
 
         return menuScene;
     }
@@ -182,8 +194,6 @@ public class menuUI {
                 ex.printStackTrace();
             }
         });
-
-        task.setOnFailed(e -> task.getException().printStackTrace());
 
         Thread thread = new Thread(task);
         thread.setDaemon(true);
@@ -236,38 +246,53 @@ public class menuUI {
         ImageView backBtn2 = makeImageButton("/ui/btnBack.png", 200);
         backBtn2.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> stage.setScene(previousScene));
 
-        abt.getChildren().addAll(abtText, backBtn2);
+        abt.getChildren().addAll(abtText, backBtn);
 
         Image bgImg = new Image(menuUI.class.getResource("/animatedbackground.gif").toExternalForm());
         ImageView background = new ImageView(bgImg);
         background.setFitHeight(720);
         background.setFitWidth(720);
-        background.setPreserveRatio(false);
 
         StackPane root = new StackPane(background, abt);
         return new Scene(root, 720, 720);
     }
 
     protected static Scene instructionBtn(Stage stage, Scene previousScene) {
-        VBox instrct = new VBox();
-        instrct.setSpacing(15);
+        VBox instrct = new VBox(20);
         instrct.setAlignment(Pos.CENTER);
 
-        Label instText = new Label("Destroy the enemies and conquer the universe");
+        Label instTitle = new Label("MISSION BRIEFING");
+        instTitle.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #00FF00;");
+
+        Label instText = new Label(
+                "OBJECTIVE: \nDestroy the alien invaders and protect the universe!\n\n" +
+                        "CONTROLS: \n" +
+                        "• [ W / A / S / D ] KEYS - Move Spaceship\n" +
+                        "• [ SPACEBAR ] - Fire Laser Cannons\n" +
+                        "• [ Q ] - EMERGENCY DASH (Triple Speed)\n\n" +
+                        "SURVIVAL TIPS: \n" +
+                        "• Use WASD to dodge in all directions.\n" +
+                        "• Asteroids are destructive—shoot them down.\n" +
+                        "• Hold Q while moving for tactical speed!"
+        );
+        instText.setTextAlignment(TextAlignment.CENTER);
         instText.setTextFill(Color.WHITE);
+        instText.setStyle("-fx-font-size: 16px; -fx-line-spacing: 5px;");
 
         ImageView instBtn2 = makeImageButton("/ui/btnBack.png", 200);
         instBtn2.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> stage.setScene(previousScene));
 
-        instrct.getChildren().addAll(instText, instBtn2);
+        instrct.getChildren().addAll(instTitle, instText, backBtn);
 
         Image bgImg = new Image(menuUI.class.getResource("/animatedbackground.gif").toExternalForm());
         ImageView background = new ImageView(bgImg);
         background.setFitHeight(720);
         background.setFitWidth(720);
-        background.setPreserveRatio(false);
 
         StackPane root = new StackPane(background, instrct);
-        return new Scene(root, 720, 720);
+        Scene scene = new Scene(root, 720, 720);
+        scene.getStylesheets().add(menuUI.class.getResource("style.css").toExternalForm());
+
+        return scene;
     }
 }
