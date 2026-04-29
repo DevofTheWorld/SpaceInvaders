@@ -57,10 +57,10 @@ public class GameLoop {
         heartEmpty     = new Image(GameLoop.class.getResource("/ui/heartEmpty.png").toExternalForm());
 
         ImageView heart = new ImageView(heartFull);
-        heart.setFitWidth(96);
-        heart.setFitHeight(96);
+        heart.setFitWidth(231);
+        heart.setFitHeight(43);
         heart.setTranslateX(25);
-        heart.setTranslateY(5);
+        heart.setTranslateY(650);
         heartIcons.add(heart);
         gameRoot.getChildren().add(heart);
     }
