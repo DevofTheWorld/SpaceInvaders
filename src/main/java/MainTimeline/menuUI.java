@@ -107,7 +107,7 @@ public class menuUI {
         };
         titleAnim.start();
 
-        // buttons
+        // FIX 1: Removed duplicate Button declarations — keeping only ImageView buttons
         ImageView startBtn = makeImageButton("/ui/btnStart.png",        230);
         ImageView aboutBtn = makeImageButton("/ui/btnAbout.png",        230);
         ImageView instBtn  = makeImageButton("/ui/btnInstructions.png", 230);
@@ -123,6 +123,7 @@ public class menuUI {
         buttonBox.setAlignment(Pos.CENTER);
         buttonBox.setPadding(new Insets(35, 0, 200, 0));
 
+        // FIX 3: Build menuBox with titleBox + buttonBox only once
         VBox menuBox = new VBox();
         menuBox.setAlignment(Pos.CENTER);
         menuBox.setSpacing(15);
@@ -133,21 +134,10 @@ public class menuUI {
         background.setFitWidth(720);
         background.setFitHeight(720);
 
-        Button startBtn = new Button("START GAME");
-        Button instBtn = new Button("INSTRUCTIONS");
-        Button aboutBtn = new Button("ABOUT");
-        Button exitBtn = new Button("EXIT");
-
-        startBtn.setPrefWidth(200);
-        instBtn.setPrefWidth(200);
-        aboutBtn.setPrefWidth(200);
-        exitBtn.setPrefWidth(200);
-
         StackPane menuRoot = new StackPane(background, menuBox);
         Scene menuScene = new Scene(menuRoot, 720, 720);
 
-        menuUI ui = new menuUI();
-
+        // FIX 2: Removed "menuUI ui = new menuUI()" — calling static methods directly
         startBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
             titleAnim.stop();
             Scene loadingScene = menuUI.createLoadingScene();
@@ -157,17 +147,17 @@ public class menuUI {
 
         aboutBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
             titleAnim.stop();
-            stage.setScene(ui.abtBtn(stage, menuScene));
+            stage.setScene(menuUI.abtBtn(stage, menuScene));
         });
 
         instBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
             titleAnim.stop();
-            stage.setScene(ui.instructionBtn(stage, menuScene));
+            stage.setScene(menuUI.instructionBtn(stage, menuScene));
         });
 
         exitBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> System.exit(0));
 
-        menuBox.getChildren().addAll(titleLabel, startBtn, instBtn, aboutBtn, exitBtn);
+        // FIX 3 (continued): Removed second addAll() call that was here
 
         return menuScene;
     }
@@ -235,6 +225,7 @@ public class menuUI {
         return gameScene;
     }
 
+    // FIX 4: Added backBtn2 to the layout's children
     protected static Scene abtBtn(Stage stage, Scene previousScene) {
         VBox abt = new VBox();
         abt.setSpacing(15);
@@ -246,7 +237,7 @@ public class menuUI {
         ImageView backBtn2 = makeImageButton("/ui/btnBack.png", 200);
         backBtn2.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> stage.setScene(previousScene));
 
-        abt.getChildren().addAll(abtText, backBtn);
+        abt.getChildren().addAll(abtText, backBtn2); // backBtn2 now added
 
         Image bgImg = new Image(menuUI.class.getResource("/animatedbackground.gif").toExternalForm());
         ImageView background = new ImageView(bgImg);
@@ -257,6 +248,7 @@ public class menuUI {
         return new Scene(root, 720, 720);
     }
 
+    // FIX 5: Added instBtn2 to the layout's children
     protected static Scene instructionBtn(Stage stage, Scene previousScene) {
         VBox instrct = new VBox(20);
         instrct.setAlignment(Pos.CENTER);
@@ -282,7 +274,7 @@ public class menuUI {
         ImageView instBtn2 = makeImageButton("/ui/btnBack.png", 200);
         instBtn2.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> stage.setScene(previousScene));
 
-        instrct.getChildren().addAll(instTitle, instText, backBtn);
+        instrct.getChildren().addAll(instTitle, instText, instBtn2); // instBtn2 now added
 
         Image bgImg = new Image(menuUI.class.getResource("/animatedbackground.gif").toExternalForm());
         ImageView background = new ImageView(bgImg);
