@@ -9,7 +9,7 @@ public class Control {
     boolean leftPressed = false;
     boolean rightPressed = false;
     boolean dashPressed = false;
-    boolean fireHeld = false; // tracks if space is being held
+    boolean fireHeld = false; //tracks if space is being held
 
     private playerBullets bullets;
 

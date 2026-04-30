@@ -44,7 +44,7 @@ public class enemyBullets {
         dirX /= len;
         dirY /= len;
 
-        // rotate bullet sprite to face direction of travel
+        //rotate bullet sprite to face direction of travel
         double angle = Math.toDegrees(Math.atan2(dirY, dirX)) + 90;
         bullet.setRotate(angle);
 
@@ -66,7 +66,7 @@ public class enemyBullets {
             b.setTranslateX(newX);
             b.setTranslateY(newY);
 
-            // remove if off screen in any direction
+            //remove if off screen in any direction
             if (newX < -20 || newX > 740 || newY < -20 || newY > 760) {
                 toRemove.add(b);
             }

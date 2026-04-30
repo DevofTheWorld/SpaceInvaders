@@ -145,6 +145,12 @@ public class Player {
         System.out.println("Player hit! Health: " + health);
         return true;
     }
+    public void restoreHealth() {
+        if (health < maxHealth) {
+            health++;
+            System.out.println("Health restored! Health: " + health);
+        }
+    }
 
     public boolean isDashing() { return dashing; }
     public boolean isDead() { return health <= 0; }

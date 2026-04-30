@@ -14,15 +14,15 @@ public class enemy {
     private int health = 3;
 
     private long spawnTime;
-    private static final long KAMIKAZE_DELAY = 10_000_000_000L;
+    private static final long KAMIKAZE_DELAY = 8_000_000_000L; //enemy sacrifice to hit player, after 10 sec spawning
 
     private boolean kamikazeMode = false;
     private double kamikazeDX = 0;
     private double kamikazeDY = 0;
-    private static final double KAMIKAZE_SPEED = 6.0;
+    private static final double KAMIKAZE_SPEED = 10.0;//speed of hitting the enemy
 
     private boolean dead = false;
-    private double currentRotation = 0;
+    private double currentRotation = 0; //rotation of the enemey based on player position
 
     private static final double TOP_THIRD = 720 * 0.33;
 

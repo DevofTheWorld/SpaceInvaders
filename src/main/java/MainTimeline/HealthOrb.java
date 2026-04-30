@@ -4,14 +4,14 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 
-public class SpeedBuff {
+public class HealthOrb {
 
     private ImageView sprite;
     private double x, y;
     private static final double FALL_SPEED = 2.0;
 
-    public SpeedBuff(Pane root, double x, double y) {
-        Image img = new Image(SpeedBuff.class.getResource("/orbBuff.png").toExternalForm());
+    public HealthOrb(Pane root, double x, double y) {
+        Image img = new Image(HealthOrb.class.getResource("/healthOrb.png").toExternalForm());
         sprite = new ImageView(img);
         sprite.setFitWidth(20);
         sprite.setPreserveRatio(true);
@@ -29,11 +29,9 @@ public class SpeedBuff {
         sprite.setTranslateY(y);
     }
 
-
-    public double getY() { return y;
-    }
-    public ImageView getSprite() { return sprite;
-    }
+    public double getX() { return x; }
+    public double getY() { return y; }
+    public ImageView getSprite() { return sprite; }
 
     public void remove(Pane root) {
         root.getChildren().remove(sprite);
