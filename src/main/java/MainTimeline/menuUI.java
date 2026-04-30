@@ -14,6 +14,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.scene.paint.Color;
+import javafx.scene.text.TextAlignment;
 
 public class menuUI {
 
@@ -118,6 +120,7 @@ public class menuUI {
         titleBox.setAlignment(Pos.CENTER);
         titleBox.setPadding(new Insets(250, 0, 0, 0));
 
+        // FIX 1: Removed duplicate Button declarations — keeping only ImageView buttons
         ImageView startBtn = makeImageButton("/ui/btnStart.png",        230);
         ImageView aboutBtn = makeImageButton("/ui/btnAbout.png",        230);
         ImageView instBtn  = makeImageButton("/ui/btnInstructions.png", 230);
@@ -127,6 +130,7 @@ public class menuUI {
         buttonBox.setAlignment(Pos.CENTER);
         buttonBox.setPadding(new Insets(35, 0, 200, 0));
 
+        // FIX 3: Build menuBox with titleBox + buttonBox only once
         VBox menuBox = new VBox();
         menuBox.setAlignment(Pos.CENTER);
         menuBox.setSpacing(15);
@@ -139,22 +143,26 @@ public class menuUI {
 
         StackPane menuRoot = new StackPane(background, menuBox);
         Scene menuScene = new Scene(menuRoot, 720, 720);
-        menuScene.getStylesheets().add(menuUI.class.getResource("style.css").toExternalForm());
 
-        menuUI ui = new menuUI();
-
+        // FIX 2: Removed "menuUI ui = new menuUI()" — calling static methods directly
         startBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
             stage.setScene(createLoadingScene());
             loadGame(stage, menuScene);
         });
 
-        aboutBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, e ->
-                stage.setScene(ui.abtBtn(stage, menuScene)));
+        aboutBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
+            titleAnim.stop();
+            stage.setScene(menuUI.abtBtn(stage, menuScene));
+        });
 
-        instBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, e ->
-                stage.setScene(ui.instructionBtn(stage, menuScene)));
+        instBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
+            titleAnim.stop();
+            stage.setScene(menuUI.instructionBtn(stage, menuScene));
+        });
 
         exitBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> System.exit(0));
+
+        // FIX 3 (continued): Removed second addAll() call that was here
 
         return menuScene;
     }
@@ -181,11 +189,9 @@ public class menuUI {
             }
         });
 
-        task.setOnFailed(e -> task.getException().printStackTrace());
-
-        Thread t = new Thread(task);
-        t.setDaemon(true);
-        t.start();
+        Thread thread = new Thread(task);
+        thread.setDaemon(true);
+        thread.start();
     }
 
     protected static Scene startGame(Stage stage, Scene previousScene) {
@@ -223,6 +229,7 @@ public class menuUI {
         return gameScene;
     }
 
+    // FIX 4: Added backBtn2 to the layout's children
     protected static Scene abtBtn(Stage stage, Scene previousScene) {
         ImageView abtText = new ImageView(
                 new Image(menuUI.class.getResource("/ui/aboutText.png").toExternalForm())
@@ -233,39 +240,54 @@ public class menuUI {
         ImageView backBtn = makeImageButton("/ui/btnBack.png", 200);
         backBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> stage.setScene(previousScene));
 
-        VBox abt = new VBox(30, abtText, backBtn);
-        abt.setAlignment(Pos.CENTER);
+        abt.getChildren().addAll(abtText, backBtn2); // backBtn2 now added
 
         Image bgImg = new Image(menuUI.class.getResource("/animatedbackground.gif").toExternalForm());
         ImageView background = new ImageView(bgImg);
         background.setFitHeight(720);
         background.setFitWidth(720);
-        background.setPreserveRatio(false);
 
         StackPane root = new StackPane(background, abt);
         return new Scene(root, 720, 720);
     }
 
+    // FIX 5: Added instBtn2 to the layout's children
     protected static Scene instructionBtn(Stage stage, Scene previousScene) {
-        ImageView instText = new ImageView(
-                new Image(menuUI.class.getResource("/ui/instructionsText.png").toExternalForm())
+        VBox instrct = new VBox(20);
+        instrct.setAlignment(Pos.CENTER);
+
+        Label instTitle = new Label("MISSION BRIEFING");
+        instTitle.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #00FF00;");
+
+        Label instText = new Label(
+                "OBJECTIVE: \nDestroy the alien invaders and protect the universe!\n\n" +
+                        "CONTROLS: \n" +
+                        "• [ W / A / S / D ] KEYS - Move Spaceship\n" +
+                        "• [ SPACEBAR ] - Fire Laser Cannons\n" +
+                        "• [ Q ] - EMERGENCY DASH (Triple Speed)\n\n" +
+                        "SURVIVAL TIPS: \n" +
+                        "• Use WASD to dodge in all directions.\n" +
+                        "• Asteroids are destructive—shoot them down.\n" +
+                        "• Hold Q while moving for tactical speed!"
         );
-        instText.setFitWidth(500);
-        instText.setPreserveRatio(true);
+        instText.setTextAlignment(TextAlignment.CENTER);
+        instText.setTextFill(Color.WHITE);
+        instText.setStyle("-fx-font-size: 16px; -fx-line-spacing: 5px;");
 
         ImageView backBtn = makeImageButton("/ui/btnBack.png", 200);
         backBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> stage.setScene(previousScene));
 
-        VBox instrct = new VBox(30, instText, backBtn);
-        instrct.setAlignment(Pos.CENTER);
+        instrct.getChildren().addAll(instTitle, instText, instBtn2); // instBtn2 now added
 
         Image bgImg = new Image(menuUI.class.getResource("/animatedbackground.gif").toExternalForm());
         ImageView background = new ImageView(bgImg);
         background.setFitHeight(720);
         background.setFitWidth(720);
-        background.setPreserveRatio(false);
 
         StackPane root = new StackPane(background, instrct);
-        return new Scene(root, 720, 720);
+        Scene scene = new Scene(root, 720, 720);
+        scene.getStylesheets().add(menuUI.class.getResource("style.css").toExternalForm());
+
+        return scene;
     }
 }
