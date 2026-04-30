@@ -75,7 +75,6 @@ public class GameLoop {
         heartIcons.get(0).setImage(img);
     }
 
-    // helper — image button with hover/press effects, no hand cursor flicker
     private ImageView makeImageButton(String path, double width) {
         Image img = new Image(GameLoop.class.getResource(path).toExternalForm());
         ImageView btn = new ImageView(img);
@@ -97,6 +96,7 @@ public class GameLoop {
             @Override
             public void handle(long now) {
 
+                // --- player movement ---
                 double dx = 0, dy = 0;
                 if (control.upPressed)    dy -= 1;
                 if (control.downPressed)  dy += 1;
@@ -111,6 +111,7 @@ public class GameLoop {
                 boolean moving = dx != 0 || dy != 0;
                 player.move(dx, dy, moving, now);
 
+                // --- player shooting ---
                 if (control.fireHeld && now - lastFireTime >= FIRE_RATE) {
                     bullets.shoot();
                     lastFireTime = now;
@@ -118,6 +119,7 @@ public class GameLoop {
 
                 updateHealthDisplay();
 
+                // --- move bullets upward, remove off-screen ---
                 bullets.getBullets().removeIf(b -> {
                     if (b.getTranslateY() < -20) {
                         bullets.getRoot().getChildren().remove(b);
@@ -127,14 +129,14 @@ public class GameLoop {
                 });
 
                 for (ImageView b : bullets.getBullets()) {
-                    b.setTranslateY(b.getTranslateY() - 5);
+                    b.setTranslateY(b.getTranslateY() - bullets.getBulletSpeed(now));
                 }
 
                 bullets.updateBullets(now);
-                spawner.update(now, player.getX());
+                spawner.update(now, player.getX(), player.getY());
                 asteroidSpawner.update(now);
 
-                // player bullets hitting enemies
+                // --- player bullets hitting enemies ---
                 List<ImageView> bulletHits    = new ArrayList<>();
                 List<enemy>     killedEnemies = new ArrayList<>();
 
@@ -158,7 +160,46 @@ public class GameLoop {
                 }
                 for (enemy e : killedEnemies) spawner.removeEnemy(e);
 
-                // asteroid collision
+                // --- player bullets hitting asteroids ---
+                List<ImageView> bulletHitsAsteroid = new ArrayList<>();
+                List<spaceDebris> asteroidsShot = new ArrayList<>();
+
+                for (ImageView b : bullets.getBullets()) {
+                    for (spaceDebris a : asteroidSpawner.getAsteroids()) {
+                        if (b.getBoundsInParent().intersects(a.getSprite().getBoundsInParent())) {
+                            bulletHitsAsteroid.add(b);
+                            asteroidsShot.add(a);
+                            break;
+                        }
+                    }
+                }
+
+                for (ImageView b : bulletHitsAsteroid) {
+                    int index = bullets.getBullets().indexOf(b);
+                    if (index >= 0) {
+                        bullets.getSpawnTimes().remove(index);
+                        bullets.getBullets().remove(index);
+                    }
+                    gameRoot.getChildren().remove(b);
+                }
+                for (spaceDebris a : asteroidsShot) {
+                    asteroidSpawner.destroyAsteroid(a);
+                }
+
+                // --- player collecting speed buffs ---
+                List<SpeedBuff> collectedBuffs = new ArrayList<>();
+                for (SpeedBuff buff : asteroidSpawner.getBuffs()) {
+                    if (buff.getSprite().getBoundsInParent()
+                            .intersects(player.getSprite().getBoundsInParent())) {
+                        collectedBuffs.add(buff);
+                        bullets.activateSpeedBuff(now);
+                    }
+                }
+                for (SpeedBuff buff : collectedBuffs) {
+                    asteroidSpawner.removeBuff(buff);
+                }
+
+                // --- asteroid body hitting player ---
                 List<spaceDebris> asteroidsToRemove = new ArrayList<>();
                 for (spaceDebris a : asteroidSpawner.getAsteroids()) {
                     if (a.getSprite().getBoundsInParent()
@@ -171,11 +212,10 @@ public class GameLoop {
                     }
                 }
                 for (spaceDebris a : asteroidsToRemove) {
-                    gameRoot.getChildren().remove(a.getSprite());
-                    asteroidSpawner.getAsteroids().remove(a);
+                    asteroidSpawner.destroyAsteroid(a);
                 }
 
-                // enemy body collision
+                // --- enemy body hitting player ---
                 List<enemy> enemiesToRemove = new ArrayList<>();
                 for (enemy e : spawner.getEnemies()) {
                     if (e.collidesWith(player.getSprite())) {
@@ -188,7 +228,7 @@ public class GameLoop {
                 }
                 for (enemy e : enemiesToRemove) spawner.removeEnemy(e);
 
-                // enemy bullet collision
+                // --- enemy bullets hitting player ---
                 List<ImageView> bulletsToRemove = new ArrayList<>();
                 for (ImageView eb : enemyBullets.getBullets()) {
                     if (eb.getBoundsInParent()
@@ -213,7 +253,7 @@ public class GameLoop {
     private void showGameOver() {
         heartIcons.get(0).setImage(heartEmpty);
 
-        // music: fade volume
+        // music fade out
         double startVolume = mediaPlayer.getVolume();
         int steps = 40;
         Timeline fadeOut = new Timeline();
@@ -255,7 +295,7 @@ public class GameLoop {
             stage.setScene(newGame);
         });
 
-        // main menu — PNG button
+        // main menu button
         ImageView menuBtn = makeImageButton("/ui/btnMainMenu.png", 150);
         menuBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
             mediaPlayer.stop();

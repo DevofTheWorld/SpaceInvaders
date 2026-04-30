@@ -151,4 +151,5 @@ public class Player {
     public int getHealth() { return health; }
     public ImageView getSprite() { return sprite; }
     public double getX() { return x; }
+    public double getY() { return y; }
 }

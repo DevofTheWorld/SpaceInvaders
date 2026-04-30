@@ -13,19 +13,22 @@ public class spaceDebris {
     private double speedX;
     private double rotation = 0;
     private double rotationSpeed;
+    private double size;
 
     public spaceDebris(Pane root) {
         Image img = new Image(spaceDebris.class.getResource("/asteroid.png").toExternalForm());
         sprite = new ImageView(img);
         sprite.setSmooth(false);
         sprite.setPreserveRatio(true);
-        sprite.setFitWidth(40 + Math.random() * 30);
+
+        size = 40 + Math.random() * 30;
+        sprite.setFitWidth(size);
 
         x = 20 + Math.random() * 680;
         y = -50;
 
-        speedY = 4.0 + Math.random() * 3.0;
-        speedX = (Math.random() - 0.5) * 3.0;
+        speedY = 1.5 + Math.random() * 2.0;   // slower than before
+        speedX = (Math.random() - 0.5) * 1.5;
         rotationSpeed = (Math.random() - 0.5) * 6;
 
         sprite.setTranslateX(x);
@@ -45,7 +48,12 @@ public class spaceDebris {
         sprite.setTranslateY(y);
     }
 
+    public void destroy(Pane root) {
+        root.getChildren().remove(sprite);
+    }
+
     public double getX() { return x; }
     public double getY() { return y; }
+    public double getSize() { return size; }
     public ImageView getSprite() { return sprite; }
 }

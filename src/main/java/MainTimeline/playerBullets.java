@@ -1,10 +1,10 @@
 package MainTimeline;
 
-import javafx.scene.image.ImageView;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.Pane;
 import java.util.ArrayList;
 import java.util.List;
-import javafx.scene.layout.Pane;
 
 public class playerBullets {
 
@@ -12,13 +12,19 @@ public class playerBullets {
     private Pane root;
 
     private List<ImageView> bullets = new ArrayList<>();
-    private List<Long> spawnTimes = new ArrayList<>(); // track when each bullet was created
+    private List<Long> spawnTimes = new ArrayList<>();
 
-    //load two bullet frames
     private Image frame1 = new Image(getClass().getResource("/shoot1.png").toExternalForm());
     private Image frame2 = new Image(getClass().getResource("/shoot2.png").toExternalForm());
 
-    private static final long FRAME_DURATION = 100_000_000L; // switch frame every 100ms
+    private static final long FRAME_DURATION = 100_000_000L;
+
+    // speed buff
+    private boolean speedBuffActive = false;
+    private long speedBuffEndTime = 0;
+    private static final long BUFF_DURATION = 5_000_000_000L; // 5 seconds
+    private static final double NORMAL_SPEED = 5;
+    private static final double BUFFED_SPEED = 10;
 
     public playerBullets(Player player, Pane root) {
         this.player = player;
@@ -26,7 +32,7 @@ public class playerBullets {
     }
 
     public void shoot() {
-        ImageView bullet = new ImageView(frame1); // start on frame 1
+        ImageView bullet = new ImageView(frame1);
 
         bullet.setFitWidth(8);
         bullet.setPreserveRatio(true);
@@ -43,20 +49,28 @@ public class playerBullets {
     public void updateBullets(long now) {
         for (int i = 0; i < bullets.size(); i++) {
             long elapsed = now - spawnTimes.get(i);
-            // alternate between frame 1 and 2
             long frameIndex = (elapsed / FRAME_DURATION) % 2;
             bullets.get(i).setImage(frameIndex == 0 ? frame1 : frame2);
         }
     }
 
-    public List<ImageView> getBullets() {
-        return bullets;
+    public void activateSpeedBuff(long now) {
+        speedBuffActive = true;
+        speedBuffEndTime = now + BUFF_DURATION;
     }
 
-    public List<Long> getSpawnTimes() {
-        return spawnTimes;
+    public boolean isSpeedBuffActive(long now) {
+        if (speedBuffActive && now > speedBuffEndTime) {
+            speedBuffActive = false;
+        }
+        return speedBuffActive;
     }
-    public Pane getRoot() {
-        return root;
+
+    public double getBulletSpeed(long now) {
+        return isSpeedBuffActive(now) ? BUFFED_SPEED : NORMAL_SPEED;
     }
+
+    public List<ImageView> getBullets() { return bullets; }
+    public List<Long> getSpawnTimes() { return spawnTimes; }
+    public Pane getRoot() { return root; }
 }
