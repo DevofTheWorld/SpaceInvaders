@@ -16,6 +16,8 @@ import javafx.geometry.Pos;
 
 import java.util.ArrayList;
 import java.util.List;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 
 public class GameLoop {
 
@@ -34,6 +36,9 @@ public class GameLoop {
     private Stage stage;
     private javafx.scene.media.MediaPlayer mediaPlayer;
 
+    public int killCount = 0;
+    public boolean bossSpawned = false;
+    
     private long lastFireTime = 0;
     private static final long FIRE_RATE = 200_000_000L;
 
@@ -158,7 +163,17 @@ public class GameLoop {
                     }
                     gameRoot.getChildren().remove(b);
                 }
-                for (enemy e : killedEnemies) spawner.removeEnemy(e);
+                for (enemy e : killedEnemies) { 
+                    spawner.removeEnemy(e); 
+                    killCount++; 
+                    System.out.println("Kills: " + killCount);
+                }
+                
+                //Boss Trigger
+                if (killCount == 2 && !bossSpawned){
+                System.out.println("Spawn Boss ! ! ! !@e13123125 ");
+                bossSpawned = true;
+                } 
 
                 // hit asteroid by player bullet
                 List<ImageView> bulletHitsAsteroid = new ArrayList<>();
@@ -193,6 +208,17 @@ public class GameLoop {
                             .intersects(player.getSprite().getBoundsInParent())) {
                         collectedBuffs.add(buff);
                         bullets.activateSpeedBuff(now);
+                        
+                        //Play Speed UP sfx
+                        try {
+                            Media sound = new Media(playerBullets.class.getResource("/speedbuff.wav").toExternalForm());
+                            MediaPlayer sfx = new MediaPlayer(sound);
+                            sfx.setVolume(0.6);
+                            sfx.play();
+                            sfx.setOnEndOfMedia(sfx::dispose);
+                        } catch (Exception ignored) {
+                        }
+                        
                     }
                 }
                 for (SpeedBuff buff : collectedBuffs) {
@@ -206,6 +232,17 @@ public class GameLoop {
                             .intersects(player.getSprite().getBoundsInParent())) {
                         collectedOrbs.add(orb);
                         player.restoreHealth();
+                       
+                        //Play Health UP sfx
+                        try {
+                            Media sound = new Media(playerBullets.class.getResource("/healthup.wav").toExternalForm());
+                            MediaPlayer sfx = new MediaPlayer(sound);
+                            sfx.setVolume(0.7);
+                            sfx.play();
+                            sfx.setOnEndOfMedia(sfx::dispose);
+                        } catch (Exception ignored) {
+                        }
+                        
                     }
                 }
                 for (HealthOrb orb : collectedOrbs) {
@@ -261,8 +298,17 @@ public class GameLoop {
         };
 
         timerRef[0].start();
+        
+        
+        
+        
+  
+        
+        
+        
     }
-
+    
+    
     private void showGameOver() {
         heartIcons.get(0).setImage(heartEmpty);
 

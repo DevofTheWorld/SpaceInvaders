@@ -47,6 +47,8 @@ public class playerBullets {
         spawnTimes.add(System.nanoTime());
         root.getChildren().add(bullet);
 
+        
+        
         // play shoot sfx
         try {
             Media sound = new Media(playerBullets.class.getResource("/shot1.wav").toExternalForm());
@@ -84,5 +86,5 @@ public class playerBullets {
 
     public List<ImageView> getBullets() { return bullets; }
     public List<Long> getSpawnTimes() { return spawnTimes; }
-    public Pane getRoot() { return root; }
+    public Pane getRoot() { return root; } 
 }
