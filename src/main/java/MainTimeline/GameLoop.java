@@ -4,9 +4,10 @@ import javafx.animation.AnimationTimer;
 import javafx.animation.Timeline;
 import javafx.animation.KeyFrame;
 import javafx.util.Duration;
-import javafx.scene.control.Button;
+import javafx.scene.Cursor;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -34,7 +35,7 @@ public class GameLoop {
     private javafx.scene.media.MediaPlayer mediaPlayer;
 
     private long lastFireTime = 0;
-    private static final long FIRE_RATE = 200_000_000L; // 0.2 seconds
+    private static final long FIRE_RATE = 200_000_000L;
 
     public GameLoop(Player player, Control control, playerBullets bullets,
                     enemySpawner spawner, enemyBullets enemyBullets,
@@ -56,10 +57,10 @@ public class GameLoop {
         heartEmpty     = new Image(GameLoop.class.getResource("/ui/heartEmpty.png").toExternalForm());
 
         ImageView heart = new ImageView(heartFull);
-        heart.setFitWidth(96);
-        heart.setFitHeight(96);
+        heart.setFitWidth(231);
+        heart.setFitHeight(43);
         heart.setTranslateX(25);
-        heart.setTranslateY(5);
+        heart.setTranslateY(650);
         heartIcons.add(heart);
         gameRoot.getChildren().add(heart);
     }
@@ -71,8 +72,20 @@ public class GameLoop {
         else if (hp == 2) img = heartTwoThirds;
         else if (hp == 1) img = heartOneThird;
         else              img = heartEmpty;
-
         heartIcons.get(0).setImage(img);
+    }
+
+    private ImageView makeImageButton(String path, double width) {
+        Image img = new Image(GameLoop.class.getResource(path).toExternalForm());
+        ImageView btn = new ImageView(img);
+        btn.setFitWidth(width);
+        btn.setPreserveRatio(true);
+        btn.setCursor(Cursor.HAND);
+        btn.addEventHandler(MouseEvent.MOUSE_ENTERED,  e -> btn.setOpacity(0.8));
+        btn.addEventHandler(MouseEvent.MOUSE_EXITED,   e -> btn.setOpacity(1.0));
+        btn.addEventHandler(MouseEvent.MOUSE_PRESSED,  e -> btn.setOpacity(0.6));
+        btn.addEventHandler(MouseEvent.MOUSE_RELEASED, e -> btn.setOpacity(1.0));
+        return btn;
     }
 
     public void start() {
@@ -83,7 +96,7 @@ public class GameLoop {
             @Override
             public void handle(long now) {
 
-                // player movement
+                // --- player movement ---
                 double dx = 0, dy = 0;
                 if (control.upPressed)    dy -= 1;
                 if (control.downPressed)  dy += 1;
@@ -98,7 +111,7 @@ public class GameLoop {
                 boolean moving = dx != 0 || dy != 0;
                 player.move(dx, dy, moving, now);
 
-                // auto fire
+                // --- player shooting ---
                 if (control.fireHeld && now - lastFireTime >= FIRE_RATE) {
                     bullets.shoot();
                     lastFireTime = now;
@@ -106,7 +119,7 @@ public class GameLoop {
 
                 updateHealthDisplay();
 
-                // player bullets movement
+                // --- move bullets upward, remove off-screen ---
                 bullets.getBullets().removeIf(b -> {
                     if (b.getTranslateY() < -20) {
                         bullets.getRoot().getChildren().remove(b);
@@ -116,18 +129,14 @@ public class GameLoop {
                 });
 
                 for (ImageView b : bullets.getBullets()) {
-                    b.setTranslateY(b.getTranslateY() - 5);
+                    b.setTranslateY(b.getTranslateY() - bullets.getBulletSpeed(now));
                 }
 
                 bullets.updateBullets(now);
-
-                // enemies + enemy bullets
-                spawner.update(now, player.getX());
-
-                // asteroids
+                spawner.update(now, player.getX(), player.getY());
                 asteroidSpawner.update(now);
 
-                // player bullets hitting enemies
+                // --- player bullets hitting enemies ---
                 List<ImageView> bulletHits    = new ArrayList<>();
                 List<enemy>     killedEnemies = new ArrayList<>();
 
@@ -135,8 +144,7 @@ public class GameLoop {
                     for (enemy e : spawner.getEnemies()) {
                         if (b.getBoundsInParent().intersects(e.getSprite().getBoundsInParent())) {
                             bulletHits.add(b);
-                            boolean died = e.takeDamage();
-                            if (died) killedEnemies.add(e);
+                            if (e.takeDamage()) killedEnemies.add(e);
                             break;
                         }
                     }
@@ -150,12 +158,48 @@ public class GameLoop {
                     }
                     gameRoot.getChildren().remove(b);
                 }
+                for (enemy e : killedEnemies) spawner.removeEnemy(e);
 
-                for (enemy e : killedEnemies) {
-                    spawner.removeEnemy(e);
+                // --- player bullets hitting asteroids ---
+                List<ImageView> bulletHitsAsteroid = new ArrayList<>();
+                List<spaceDebris> asteroidsShot = new ArrayList<>();
+
+                for (ImageView b : bullets.getBullets()) {
+                    for (spaceDebris a : asteroidSpawner.getAsteroids()) {
+                        if (b.getBoundsInParent().intersects(a.getSprite().getBoundsInParent())) {
+                            bulletHitsAsteroid.add(b);
+                            asteroidsShot.add(a);
+                            break;
+                        }
+                    }
                 }
 
-                // asteroid collision with player
+                for (ImageView b : bulletHitsAsteroid) {
+                    int index = bullets.getBullets().indexOf(b);
+                    if (index >= 0) {
+                        bullets.getSpawnTimes().remove(index);
+                        bullets.getBullets().remove(index);
+                    }
+                    gameRoot.getChildren().remove(b);
+                }
+                for (spaceDebris a : asteroidsShot) {
+                    asteroidSpawner.destroyAsteroid(a);
+                }
+
+                // --- player collecting speed buffs ---
+                List<SpeedBuff> collectedBuffs = new ArrayList<>();
+                for (SpeedBuff buff : asteroidSpawner.getBuffs()) {
+                    if (buff.getSprite().getBoundsInParent()
+                            .intersects(player.getSprite().getBoundsInParent())) {
+                        collectedBuffs.add(buff);
+                        bullets.activateSpeedBuff(now);
+                    }
+                }
+                for (SpeedBuff buff : collectedBuffs) {
+                    asteroidSpawner.removeBuff(buff);
+                }
+
+                // --- asteroid body hitting player ---
                 List<spaceDebris> asteroidsToRemove = new ArrayList<>();
                 for (spaceDebris a : asteroidSpawner.getAsteroids()) {
                     if (a.getSprite().getBoundsInParent()
@@ -163,37 +207,28 @@ public class GameLoop {
                         boolean hit = player.takeDamage(now);
                         if (hit) {
                             asteroidsToRemove.add(a);
-                            if (player.isDead()) {
-                                timerRef[0].stop();
-                                showGameOver();
-                            }
+                            if (player.isDead()) { timerRef[0].stop(); showGameOver(); }
                         }
                     }
                 }
                 for (spaceDebris a : asteroidsToRemove) {
-                    gameRoot.getChildren().remove(a.getSprite());
-                    asteroidSpawner.getAsteroids().remove(a);
+                    asteroidSpawner.destroyAsteroid(a);
                 }
 
-                // enemy body collision with player
+                // --- enemy body hitting player ---
                 List<enemy> enemiesToRemove = new ArrayList<>();
                 for (enemy e : spawner.getEnemies()) {
                     if (e.collidesWith(player.getSprite())) {
                         boolean hit = player.takeDamage(now);
                         if (hit) {
                             enemiesToRemove.add(e);
-                            if (player.isDead()) {
-                                timerRef[0].stop();
-                                showGameOver();
-                            }
+                            if (player.isDead()) { timerRef[0].stop(); showGameOver(); }
                         }
                     }
                 }
-                for (enemy e : enemiesToRemove) {
-                    spawner.removeEnemy(e);
-                }
+                for (enemy e : enemiesToRemove) spawner.removeEnemy(e);
 
-                // enemy bullet collision with player
+                // --- enemy bullets hitting player ---
                 List<ImageView> bulletsToRemove = new ArrayList<>();
                 for (ImageView eb : enemyBullets.getBullets()) {
                     if (eb.getBoundsInParent()
@@ -201,10 +236,7 @@ public class GameLoop {
                         boolean hit = player.takeDamage(now);
                         if (hit) {
                             bulletsToRemove.add(eb);
-                            if (player.isDead()) {
-                                timerRef[0].stop();
-                                showGameOver();
-                            }
+                            if (player.isDead()) { timerRef[0].stop(); showGameOver(); }
                         }
                     }
                 }
@@ -219,71 +251,57 @@ public class GameLoop {
     }
 
     private void showGameOver() {
+        heartIcons.get(0).setImage(heartEmpty);
+
+        // music fade out
         double startVolume = mediaPlayer.getVolume();
         int steps = 40;
         Timeline fadeOut = new Timeline();
         for (int i = 1; i <= steps; i++) {
             final double t = (double) i / steps;
-            KeyFrame kf = new KeyFrame(
-                Duration.millis(i * 50),
-                e -> {
-                    mediaPlayer.setVolume(startVolume * (1.0 - t));
-                    mediaPlayer.setRate(1.0 - (0.85 * t));
-                }
-            );
+            KeyFrame kf = new KeyFrame(Duration.millis(i * 50), e -> {
+                mediaPlayer.setVolume(startVolume * (1.0 - t));
+                mediaPlayer.setRate(1.0 - (0.85 * t));
+            });
             fadeOut.getKeyFrames().add(kf);
         }
-
         fadeOut.setOnFinished(e -> {
             mediaPlayer.stop();
             mediaPlayer.setRate(0.85);
             mediaPlayer.setVolume(0.15);
             mediaPlayer.play();
         });
-
         fadeOut.play();
 
+        // dark red overlay
         javafx.scene.shape.Rectangle overlay = new javafx.scene.shape.Rectangle(720, 720);
         overlay.setFill(Color.color(0.1, 0, 0, 0.75));
         gameRoot.getChildren().add(overlay);
 
+        // game over image
         Image gameOverImg = new Image(GameLoop.class.getResource("/ui/gameOver.png").toExternalForm());
         ImageView gameOverLabel = new ImageView(gameOverImg);
-        gameOverLabel.setFitWidth(400);
+        gameOverLabel.setFitWidth(460);
         gameOverLabel.setPreserveRatio(true);
 
-        // play again button 
-        Button replayBtn = new Button("Play Again");
-        replayBtn.setStyle(
-                "-fx-font-size: 18px;" +
-                "-fx-background-color: white;" +
-                "-fx-text-fill: black;" +
-                "-fx-padding: 10 30 10 30;" +
-                "-fx-cursor: hand;"
-        );
-        replayBtn.setOnAction(e -> {
+        // play again button
+        ImageView replayBtn = makeImageButton("/ui/btnPlayAgain.png", 150);
+        replayBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
             mediaPlayer.stop();
             mediaPlayer.setRate(1.0);
             mediaPlayer.setVolume(0.5);
+            mediaPlayer.play();
             javafx.scene.Scene newGame = menuUI.startGame(stage, null);
             stage.setScene(newGame);
         });
 
-        // main menu button 
-        Button menuBtn = new Button("Main Menu");
-        menuBtn.setStyle(
-                "-fx-font-size: 18px;" +
-                "-fx-background-color: transparent;" +
-                "-fx-text-fill: white;" +
-                "-fx-border-color: white;" +
-                "-fx-border-width: 1px;" +
-                "-fx-padding: 10 30 10 30;" +
-                "-fx-cursor: hand;"
-        );
-        menuBtn.setOnAction(e -> {
+        // main menu button
+        ImageView menuBtn = makeImageButton("/ui/btnMainMenu.png", 150);
+        menuBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
             mediaPlayer.stop();
             mediaPlayer.setRate(1.0);
             mediaPlayer.setVolume(0.5);
+            mediaPlayer.play();
             javafx.scene.Scene menuScene = menuUI.createMenuScene(stage);
             stage.setScene(menuScene);
         });
@@ -292,8 +310,6 @@ public class GameLoop {
         gameOverBox.setAlignment(Pos.CENTER);
         gameOverBox.setPrefWidth(720);
         gameOverBox.setPrefHeight(720);
-
         gameRoot.getChildren().add(gameOverBox);
-        heartIcons.get(0).setImage(heartEmpty);
     }
 }
