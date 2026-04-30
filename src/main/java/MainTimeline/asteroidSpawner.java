@@ -17,9 +17,14 @@ public class asteroidSpawner {
 
     private static final double MIN_DISTANCE = 60;
 
+    /** When true: no new asteroids spawn. Existing ones keep falling. */
+    private boolean frozen = false;
+
     public asteroidSpawner(Pane root) {
         this.root = root;
     }
+
+    public void setFrozen(boolean frozen) { this.frozen = frozen; }
 
     private boolean isTooClose(double newX) {
         for (spaceDebris a : asteroids) {
@@ -29,7 +34,9 @@ public class asteroidSpawner {
     }
 
     public void update(long now) {
-        if (now - lastSpawnTime > spawnInterval) {
+
+        // spawn only when not frozen
+        if (!frozen && now - lastSpawnTime > spawnInterval) {
             for (int i = 0; i < 10; i++) {
                 double newX = 20 + Math.random() * 680;
                 if (!isTooClose(newX)) {
@@ -50,19 +57,13 @@ public class asteroidSpawner {
         });
 
         buffs.removeIf(b -> {
-            if (b.getY() > 760) {
-                b.remove(root);
-                return true;
-            }
+            if (b.getY() > 760) { b.remove(root); return true; }
             b.update();
             return false;
         });
 
         healthOrbs.removeIf(h -> {
-            if (h.getY() > 760) {
-                h.remove(root);
-                return true;
-            }
+            if (h.getY() > 760) { h.remove(root); return true; }
             h.update();
             return false;
         });
@@ -79,29 +80,24 @@ public class asteroidSpawner {
 
         double roll = Math.random();
         if (roll < 0.20) {
-            // 20% chance — speed buff (was 50%, now much rarer)
             buffs.add(new SpeedBuff(root, asteroid.getX(), asteroid.getY()));
         } else if (roll < 0.40) {
-            // 20% chance — health orb
             healthOrbs.add(new HealthOrb(root, asteroid.getX(), asteroid.getY()));
         }
-        // 60% chance — nothing drops
 
         asteroid.destroy(root);
         asteroids.remove(asteroid);
     }
 
     public List<spaceDebris> getAsteroids() { return asteroids; }
-    public List<SpeedBuff> getBuffs() { return buffs; }
-    public List<HealthOrb> getHealthOrbs() { return healthOrbs; }
+    public List<SpeedBuff>   getBuffs()     { return buffs; }
+    public List<HealthOrb>   getHealthOrbs(){ return healthOrbs; }
 
     public void removeBuff(SpeedBuff b) {
-        b.remove(root);
-        buffs.remove(b);
+        b.remove(root); buffs.remove(b);
     }
 
     public void removeHealthOrb(HealthOrb h) {
-        h.remove(root);
-        healthOrbs.remove(h);
+        h.remove(root); healthOrbs.remove(h);
     }
 }
