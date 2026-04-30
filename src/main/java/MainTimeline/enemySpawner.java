@@ -20,10 +20,17 @@ public class enemySpawner {
 
     private static final double MIN_SPAWN_DISTANCE = 80;
 
+    /** When true: no new enemies spawn and no bullets are fired.
+     *  Existing enemies still update / move until they leave the screen. */
+    private boolean frozen = false;
+
     public enemySpawner(Pane root, enemyBullets enemyBullets) {
         this.root = root;
         this.enemyBullets = enemyBullets;
     }
+
+    public void setFrozen(boolean frozen) { this.frozen = frozen; }
+    public boolean isFrozen() { return frozen; }
 
     private boolean isTooClose(double newX) {
         for (enemy e : enemies) {
@@ -34,8 +41,8 @@ public class enemySpawner {
 
     public void update(long now, double playerX, double playerY) {
 
-        // spawn, avoid stacking
-        if (now - lastSpawnTime > spawnInterval) {
+        // spawn only when not frozen
+        if (!frozen && now - lastSpawnTime > spawnInterval) {
             for (int i = 0; i < 10; i++) {
                 double newX = 20 + Math.random() * 660;
                 if (!isTooClose(newX)) {
@@ -62,7 +69,8 @@ public class enemySpawner {
             return done;
         });
 
-        if (!enemies.isEmpty() && now - lastShootTime > shootInterval) {
+        // shoot only when not frozen and enemies exist
+        if (!frozen && !enemies.isEmpty() && now - lastShootTime > shootInterval) {
             enemy shooter = enemies.get((int)(Math.random() * enemies.size()));
             enemyBullets.shoot(shooter.getX(), shooter.getY(), playerX, playerY);
             lastShootTime = now;
