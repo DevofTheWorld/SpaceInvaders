@@ -3,6 +3,8 @@ package MainTimeline;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 
 public class AsteroidExplosion {
 
@@ -30,6 +32,16 @@ public class AsteroidExplosion {
 
         root.getChildren().add(sprite);
         startTime = System.nanoTime();
+
+        //play explosion sfx
+        try {
+            Media sound = new Media(AsteroidExplosion.class.getResource("/explosion.wav").toExternalForm());
+            MediaPlayer sfx = new MediaPlayer(sound);
+            sfx.setVolume(0.7);
+            sfx.play();
+            // auto-dispose when done so it doesn't leak memory
+            sfx.setOnEndOfMedia(sfx::dispose);
+        } catch (Exception ignored) {}
     }
 
     public boolean update(long now) {

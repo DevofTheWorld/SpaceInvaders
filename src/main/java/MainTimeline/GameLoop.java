@@ -96,7 +96,7 @@ public class GameLoop {
             @Override
             public void handle(long now) {
 
-                // --- player movement ---
+                // movement of player
                 double dx = 0, dy = 0;
                 if (control.upPressed)    dy -= 1;
                 if (control.downPressed)  dy += 1;
@@ -119,7 +119,7 @@ public class GameLoop {
 
                 updateHealthDisplay();
 
-                // --- move bullets upward, remove off-screen ---
+                // bullet upward, when off the screen remove
                 bullets.getBullets().removeIf(b -> {
                     if (b.getTranslateY() < -20) {
                         bullets.getRoot().getChildren().remove(b);
@@ -136,7 +136,7 @@ public class GameLoop {
                 spawner.update(now, player.getX(), player.getY());
                 asteroidSpawner.update(now);
 
-                // --- player bullets hitting enemies ---
+                // hit enemies by player bullets
                 List<ImageView> bulletHits    = new ArrayList<>();
                 List<enemy>     killedEnemies = new ArrayList<>();
 
@@ -160,9 +160,9 @@ public class GameLoop {
                 }
                 for (enemy e : killedEnemies) spawner.removeEnemy(e);
 
-                // --- player bullets hitting asteroids ---
+                // hit asteroid by player bullet
                 List<ImageView> bulletHitsAsteroid = new ArrayList<>();
-                List<spaceDebris> asteroidsShot = new ArrayList<>();
+                List<spaceDebris> asteroidsShot    = new ArrayList<>();
 
                 for (ImageView b : bullets.getBullets()) {
                     for (spaceDebris a : asteroidSpawner.getAsteroids()) {
@@ -199,6 +199,19 @@ public class GameLoop {
                     asteroidSpawner.removeBuff(buff);
                 }
 
+                // --- player collecting health orbs ---
+                List<HealthOrb> collectedOrbs = new ArrayList<>();
+                for (HealthOrb orb : asteroidSpawner.getHealthOrbs()) {
+                    if (orb.getSprite().getBoundsInParent()
+                            .intersects(player.getSprite().getBoundsInParent())) {
+                        collectedOrbs.add(orb);
+                        player.restoreHealth();
+                    }
+                }
+                for (HealthOrb orb : collectedOrbs) {
+                    asteroidSpawner.removeHealthOrb(orb);
+                }
+
                 // --- asteroid body hitting player ---
                 List<spaceDebris> asteroidsToRemove = new ArrayList<>();
                 for (spaceDebris a : asteroidSpawner.getAsteroids()) {
@@ -215,7 +228,7 @@ public class GameLoop {
                     asteroidSpawner.destroyAsteroid(a);
                 }
 
-                // --- enemy body hitting player ---
+                // --- enemy body / kamikaze hitting player ---
                 List<enemy> enemiesToRemove = new ArrayList<>();
                 for (enemy e : spawner.getEnemies()) {
                     if (e.collidesWith(player.getSprite())) {

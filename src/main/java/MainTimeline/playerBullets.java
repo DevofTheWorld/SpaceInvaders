@@ -5,6 +5,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import java.util.ArrayList;
 import java.util.List;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 
 public class playerBullets {
 
@@ -19,7 +21,7 @@ public class playerBullets {
 
     private static final long FRAME_DURATION = 100_000_000L;
 
-    // speed buff
+    //speed buff
     private boolean speedBuffActive = false;
     private long speedBuffEndTime = 0;
     private static final long BUFF_DURATION = 5_000_000_000L; // 5 seconds
@@ -44,6 +46,16 @@ public class playerBullets {
         bullets.add(bullet);
         spawnTimes.add(System.nanoTime());
         root.getChildren().add(bullet);
+
+        // play shoot sfx
+        try {
+            Media sound = new Media(playerBullets.class.getResource("/shot1.wav").toExternalForm());
+            MediaPlayer sfx = new MediaPlayer(sound);
+            sfx.setVolume(0.3);
+            sfx.play();
+            sfx.setOnEndOfMedia(sfx::dispose);
+        } catch (Exception ignored) {
+        }
     }
 
     public void updateBullets(long now) {
