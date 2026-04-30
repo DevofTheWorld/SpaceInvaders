@@ -10,7 +10,7 @@ public class enemy {
     private double x;
     private double y;
     private double speedX;
-    private double speedY = 0.5;
+    private double speedY = 1;
     private int health = 3;
 
     private long spawnTime;
@@ -51,13 +51,13 @@ public class enemy {
             y += kamikazeDY * KAMIKAZE_SPEED;
         } else {
             if (y < TOP_THIRD) {
-                if (x < playerX) x += Math.min(1.5, playerX - x) * 0.06;
-                else if (x > playerX) x -= Math.min(1.5, x - playerX) * 0.06;
+                if (x < playerX) x += Math.min(1.5, playerX - x) * 0.12;
+                else if (x > playerX) x -= Math.min(1.5, x - playerX) * 0.12;
 
                 y += speedY;
             } else {
-                if (x < playerX) x += Math.min(2.5, playerX - x) * 0.14;
-                else if (x > playerX) x -= Math.min(2.5, x - playerX) * 0.14;
+                if (x < playerX) x += Math.min(2.5, playerX - x) * 0.20;
+                else if (x > playerX) x -= Math.min(2.5, x - playerX) * 0.20;
 
                 y += (Math.random() - 0.5) * 1.5;
             }
@@ -93,7 +93,8 @@ public class enemy {
         sprite.setOpacity(0.6);
     }
 
-    public boolean isKamikaze() { return kamikazeMode; }
+    public boolean isKamikaze() {
+        return kamikazeMode; }
 
     public boolean takeDamage() {
         health--;

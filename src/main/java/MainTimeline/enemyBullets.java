@@ -17,7 +17,7 @@ public class enemyBullets {
             enemyBullets.class.getResource("/shoot2.png").toExternalForm()
     );
 
-    private static final double BULLET_SPEED = 4.5;
+    private static final double BULLET_SPEED = 5.5;
 
     public enemyBullets(Pane root) {
         this.root = root;
@@ -25,8 +25,8 @@ public class enemyBullets {
 
     public void shoot(double enemyX, double enemyY, double playerX, double playerY) {
         ImageView bullet = new ImageView(bulletImg);
-        bullet.setFitWidth(14);
-        bullet.setFitHeight(14);
+        bullet.setFitWidth(16);
+        bullet.setFitHeight(16);
         bullet.setSmooth(false);
         bullet.setPreserveRatio(true);
 
