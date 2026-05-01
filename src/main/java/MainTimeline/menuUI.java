@@ -72,7 +72,7 @@ public class menuUI {
     private static void ensureMusicPlaying() {
         if (mediaPlayer == null) {
             javafx.scene.media.Media bgm = new javafx.scene.media.Media(
-                    menuUI.class.getResource("/bgm.mp3").toExternalForm()
+                    menuUI.class.getResource("/BGM/bgm.mp3").toExternalForm()
             );
             mediaPlayer = new javafx.scene.media.MediaPlayer(bgm);
             mediaPlayer.setCycleCount(javafx.scene.media.MediaPlayer.INDEFINITE);

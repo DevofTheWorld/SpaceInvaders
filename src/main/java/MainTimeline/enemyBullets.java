@@ -14,7 +14,7 @@ public class enemyBullets {
     private List<double[]> directions = new ArrayList<>(); // dx, dy per bullet
 
     private Image bulletImg = new Image(
-            enemyBullets.class.getResource("/shoot2.png").toExternalForm()
+            enemyBullets.class.getResource("/animation/beams.png").toExternalForm()
     );
 
     private static final double BULLET_SPEED = 4.5;

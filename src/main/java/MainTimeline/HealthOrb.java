@@ -11,7 +11,7 @@ public class HealthOrb {
     private static final double FALL_SPEED = 2.0;
 
     public HealthOrb(Pane root, double x, double y) {
-        Image img = new Image(HealthOrb.class.getResource("/healthOrb.png").toExternalForm());
+        Image img = new Image(HealthOrb.class.getResource("/Buff/healthOrb.png").toExternalForm());
         sprite = new ImageView(img);
         sprite.setFitWidth(20);
         sprite.setPreserveRatio(true);
