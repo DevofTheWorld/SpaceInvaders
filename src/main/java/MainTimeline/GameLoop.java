@@ -69,7 +69,6 @@ public class GameLoop {
     // Score HUD
     private static final int    SCORE_PER_ENEMY     = 100;
     private static final int    BOSS_SCORE_THRESHOLD = 1500;
-    private static final long   BOSS_MIN_SPAWN_NANOS = 75_000_000_000L;
     private static final long   BOSS_FORCE_SPAWN_NANOS = 90_000_000_000L;
     private static final double SCORE_X             = 25;
     private static final double SCORE_Y             = 62;
@@ -301,11 +300,10 @@ public class GameLoop {
         if (gameStartTime < 0) return false;
 
         long elapsed = now - gameStartTime;
-        boolean reachedScoreAfterTimeGate =
-                elapsed >= BOSS_MIN_SPAWN_NANOS && score >= BOSS_SCORE_THRESHOLD;
+        boolean reachedScoreThreshold = score >= BOSS_SCORE_THRESHOLD;
         boolean reachedForcedBossTime = elapsed >= BOSS_FORCE_SPAWN_NANOS;
 
-        return reachedScoreAfterTimeGate || reachedForcedBossTime;
+        return reachedScoreThreshold || reachedForcedBossTime;
     }
 
     private void showSpeedBuffHud() {
