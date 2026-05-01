@@ -80,6 +80,15 @@ public class playerBullets {
         return speedBuffActive;
     }
 
+    public long getSpeedBuffRemainingNanos(long now) {
+        if (!isSpeedBuffActive(now)) return 0;
+        return Math.max(0, speedBuffEndTime - now);
+    }
+
+    public long getBuffDurationNanos() {
+        return BUFF_DURATION;
+    }
+
     public double getBulletSpeed(long now) {
         return isSpeedBuffActive(now) ? BUFFED_SPEED : NORMAL_SPEED;
     }

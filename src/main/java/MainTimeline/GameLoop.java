@@ -76,6 +76,16 @@ public class GameLoop {
     private Text                scoreLabel;
     private int                 score               = 0;
 
+    // Speed buff HUD
+    private static final double BUFF_BAR_W          = 170;
+    private static final double BUFF_BAR_H          = 12;
+    private static final double BUFF_BAR_X          = 525;
+    private static final double BUFF_BAR_Y          = 680;
+    private Text                speedBuffLabel;
+    private Rectangle           speedBuffTrack;
+    private Rectangle           speedBuffFill;
+    private boolean             speedBuffWasActive  = false;
+
     // Boss HP bar
     private static final double HP_BAR_W = 400;
     private static final double HP_BAR_H = 14;
@@ -126,6 +136,7 @@ public class GameLoop {
         showPlayerHpBar();
         showGameTimer();
         showScoreHud();
+        showSpeedBuffHud();
     }
 
     //  Helper builders
@@ -294,6 +305,60 @@ public class GameLoop {
         boolean reachedForcedBossTime = elapsed >= BOSS_FORCE_SPAWN_NANOS;
 
         return reachedScoreAfterTimeGate || reachedForcedBossTime;
+    }
+
+    private void showSpeedBuffHud() {
+        speedBuffLabel = new Text("RAPID FIRE READY");
+        speedBuffLabel.setFont(Font.font("Monospace", FontWeight.BOLD, 14));
+        speedBuffLabel.setFill(Color.web("#00ffe744"));
+        speedBuffLabel.setTranslateX(BUFF_BAR_X);
+        speedBuffLabel.setTranslateY(BUFF_BAR_Y - 8);
+
+        DropShadow labelGlow = new DropShadow();
+        labelGlow.setColor(Color.web("#00ffe7"));
+        labelGlow.setRadius(5);
+        speedBuffLabel.setEffect(labelGlow);
+
+        speedBuffTrack = new Rectangle(BUFF_BAR_W, BUFF_BAR_H);
+        speedBuffTrack.setFill(Color.color(0, 0.04, 0.08, 0.75));
+        speedBuffTrack.setStroke(Color.web("#00ffe733"));
+        speedBuffTrack.setStrokeWidth(1);
+        speedBuffTrack.setTranslateX(BUFF_BAR_X);
+        speedBuffTrack.setTranslateY(BUFF_BAR_Y);
+        speedBuffTrack.setVisible(false);
+
+        speedBuffFill = new Rectangle(0, BUFF_BAR_H);
+        speedBuffFill.setFill(makeHpGradient(BUFF_BAR_W, Color.web("#00ffe7")));
+        speedBuffFill.setTranslateX(BUFF_BAR_X);
+        speedBuffFill.setTranslateY(BUFF_BAR_Y);
+        speedBuffFill.setVisible(false);
+
+        gameRoot.getChildren().addAll(speedBuffLabel, speedBuffTrack, speedBuffFill);
+    }
+
+    private void updateSpeedBuffHud(long now) {
+        long remaining = bullets.getSpeedBuffRemainingNanos(now);
+        boolean active = remaining > 0;
+
+        speedBuffTrack.setVisible(active);
+        speedBuffFill.setVisible(active);
+
+        if (active) {
+            double ratio = Math.min(1.0, (double) remaining / bullets.getBuffDurationNanos());
+            long remainingSeconds = (remaining + 999_999_999L) / 1_000_000_000L;
+
+            speedBuffFill.setWidth(BUFF_BAR_W * ratio);
+            speedBuffLabel.setText("RAPID FIRE " + remainingSeconds + "s");
+            speedBuffLabel.setFill((now / 200_000_000L) % 2 == 0
+                    ? Color.web("#00ffe7")
+                    : Color.web("#ffffff"));
+        } else if (speedBuffWasActive) {
+            speedBuffFill.setWidth(0);
+            speedBuffLabel.setText("RAPID FIRE DONE");
+            speedBuffLabel.setFill(Color.web("#ff8c00"));
+        }
+
+        speedBuffWasActive = active;
     }
 
     private void updatePlayerHpBar() {
@@ -565,6 +630,7 @@ public class GameLoop {
 
                 // ← replaces updateHealthDisplay()
                 updatePlayerHpBar();
+                updateSpeedBuffHud(now);
 
                 bullets.getBullets().removeIf(b -> {
                     if (b.getTranslateY() < -20) { bullets.getRoot().getChildren().remove(b); return true; }
