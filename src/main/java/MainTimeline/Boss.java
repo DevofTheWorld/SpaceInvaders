@@ -37,7 +37,7 @@ public class Boss {
     private boolean entered = false;
 
     private double moveDir  = 1;                        // 1 = right, -1 = left
-    private static final double MOVE_SPD  = 1.8;
+    private static final double MOVE_SPD  = 2.4;
 
     // bounds — keep boss fully inside the 720px wide screen
     private static final double SPRITE_W  = 250;
@@ -45,14 +45,14 @@ public class Boss {
     private static final double RIGHT_CAP = 400 - SPRITE_W;   // 470
 
     // ── combat ────────────────────────────────────────────────────────────────
-    public static final int MAX_HP = 80;
+    public static final int MAX_HP = 95;
     private int hp = MAX_HP;
     private boolean dead = false;
 
     // beam fire timing
-    private static final long FIRE_INTERVAL  = 4_000_000_000L;  // every 4 s
-    private static final long CHARGE_DUR     = 1_000_000_000L;  // 1 s charge
-    private static final long INVINCIBLE_DUR = 1_000_000_000L;  // 1 s invincibility after firing
+    private static final long FIRE_INTERVAL  = 2_800_000_000L;  // every 2.8 s
+    private static final long CHARGE_DUR     = 750_000_000L;    // 0.75 s charge
+    private static final long INVINCIBLE_DUR = 600_000_000L;    // 0.6 s invincibility after firing
     private long lastFireTime  = 0;
     private boolean charging   = false;
     private boolean readyToFire = false;
@@ -60,7 +60,7 @@ public class Boss {
     private long invincibleEnd = 0;          // invincibility window end timestamp
 
     // pre-charge wind-down (boss slows to a stop before charging)
-    private static final long WINDUP_DUR = 800_000_000L;   // 0.8 s slow-down window
+    private static final long WINDUP_DUR = 500_000_000L;   // 0.5 s slow-down window
     private boolean windingUp  = false;
     private long    windupStart = 0;
 

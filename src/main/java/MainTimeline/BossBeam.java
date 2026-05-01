@@ -10,8 +10,8 @@ public class BossBeam {
             BossBeam.class.getResource("/ui/bossfire2.png").toExternalForm()
     );
 
-    private static final double BEAM_WIDTH  = 80.0;
-    private static final long   LINGER_NS   = 2_000_000_000L;  // 2.0 s visible
+    private static final double BEAM_WIDTH  = 110.0;
+    private static final long   LINGER_NS   = 2_300_000_000L;  // 2.3 s visible
     private static final int    DAMAGE      = 2;
 
     private static final int SLICES = 64;

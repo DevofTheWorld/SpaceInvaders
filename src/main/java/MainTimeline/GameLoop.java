@@ -59,6 +59,23 @@ public class GameLoop {
     private Color                  plrCurrentColor = Color.web("#00ffe7");
     private int                    lastKnownHp     = PLAYER_MAX_HP;
 
+    // Game timer HUD
+    private static final long   GAME_DURATION_NANOS = 120_000_000_000L;
+    private static final double TIMER_X             = 25;
+    private static final double TIMER_Y             = 35;
+    private Text                timerLabel;
+    private long                gameStartTime       = -1;
+
+    // Score HUD
+    private static final int    SCORE_PER_ENEMY     = 100;
+    private static final int    BOSS_SCORE_THRESHOLD = 1500;
+    private static final long   BOSS_MIN_SPAWN_NANOS = 75_000_000_000L;
+    private static final long   BOSS_FORCE_SPAWN_NANOS = 90_000_000_000L;
+    private static final double SCORE_X             = 25;
+    private static final double SCORE_Y             = 62;
+    private Text                scoreLabel;
+    private int                 score               = 0;
+
     // Boss HP bar
     private static final double HP_BAR_W = 400;
     private static final double HP_BAR_H = 14;
@@ -77,7 +94,6 @@ public class GameLoop {
 
     // state
     public int  killCount   = 0;
-    private static final int BOSS_KILL_THRESHOLD = 7;
 
     private boolean bossPhaseTriggered = false;
     private boolean bossMusicPlaying   = false;
@@ -108,6 +124,8 @@ public class GameLoop {
         this.mediaPlayer     = mediaPlayer;
 
         showPlayerHpBar();
+        showGameTimer();
+        showScoreHud();
     }
 
     //  Helper builders
@@ -209,6 +227,73 @@ public class GameLoop {
         for (Rectangle seg : plrSegFills) {
             if (seg.getEffect() instanceof DropShadow d) d.setRadius(r);
         }
+    }
+
+    private void showGameTimer() {
+        timerLabel = new Text("02:00");
+        timerLabel.setFont(Font.font("Monospace", FontWeight.BOLD, 24));
+        timerLabel.setFill(Color.web("#00ffe7"));
+        timerLabel.setTranslateX(TIMER_X);
+        timerLabel.setTranslateY(TIMER_Y);
+
+        DropShadow glow = new DropShadow();
+        glow.setColor(Color.web("#00ffe7"));
+        glow.setRadius(8);
+        timerLabel.setEffect(glow);
+
+        gameRoot.getChildren().add(timerLabel);
+    }
+
+    private boolean updateGameTimer(long now) {
+        if (gameStartTime < 0) gameStartTime = now;
+
+        long elapsed = now - gameStartTime;
+        long remaining = Math.max(0, GAME_DURATION_NANOS - elapsed);
+        long totalSeconds = (remaining + 999_999_999L) / 1_000_000_000L;
+        long minutes = totalSeconds / 60;
+        long seconds = totalSeconds % 60;
+
+        timerLabel.setText(String.format("%02d:%02d", minutes, seconds));
+
+        if (totalSeconds <= 10) {
+            timerLabel.setFill(Color.web("#ff2244"));
+            if (timerLabel.getEffect() instanceof DropShadow glow) {
+                glow.setColor(Color.web("#ff2244"));
+            }
+        }
+
+        return remaining == 0;
+    }
+
+    private void showScoreHud() {
+        scoreLabel = new Text("SCORE 0000");
+        scoreLabel.setFont(Font.font("Monospace", FontWeight.BOLD, 18));
+        scoreLabel.setFill(Color.web("#00ffe7cc"));
+        scoreLabel.setTranslateX(SCORE_X);
+        scoreLabel.setTranslateY(SCORE_Y);
+
+        DropShadow glow = new DropShadow();
+        glow.setColor(Color.web("#00ffe7"));
+        glow.setRadius(6);
+        scoreLabel.setEffect(glow);
+
+        gameRoot.getChildren().add(scoreLabel);
+    }
+
+    private void addScore(int amount) {
+        score += amount;
+        scoreLabel.setText(String.format("SCORE %04d", score));
+    }
+
+    private boolean shouldTriggerBoss(long now) {
+        if (gameStartTime < 0) return false;
+
+        long elapsed = now - gameStartTime;
+        boolean reachedScoreAfterTimeGate =
+                elapsed >= BOSS_MIN_SPAWN_NANOS && score >= BOSS_SCORE_THRESHOLD;
+        boolean reachedForcedBossTime = elapsed >= BOSS_FORCE_SPAWN_NANOS;
+
+        return reachedScoreAfterTimeGate || reachedForcedBossTime;
     }
 
     private void updatePlayerHpBar() {
@@ -458,6 +543,11 @@ public class GameLoop {
         timerRef[0] = new AnimationTimer() {
             @Override
             public void handle(long now) {
+                if (updateGameTimer(now)) {
+                    timerRef[0].stop();
+                    showGameOver();
+                    return;
+                }
 
                 double dx = 0, dy = 0;
                 if (control.upPressed)    dy -= 1;
@@ -483,7 +573,7 @@ public class GameLoop {
                 for (ImageView b : bullets.getBullets()) b.setTranslateY(b.getTranslateY() - bullets.getBulletSpeed(now));
                 bullets.updateBullets(now);
 
-                if (!bossPhaseTriggered && killCount >= BOSS_KILL_THRESHOLD) triggerBossPhase();
+                if (!bossPhaseTriggered && shouldTriggerBoss(now)) triggerBossPhase();
 
                 spawner.update(now, player.getX(), player.getY());
                 asteroidSpawner.update(now);
@@ -505,7 +595,12 @@ public class GameLoop {
                         if (idx >= 0) { bullets.getSpawnTimes().remove(idx); bullets.getBullets().remove(idx); }
                         gameRoot.getChildren().remove(b);
                     }
-                    for (enemy e : killedEnemies) { spawner.removeEnemy(e); killCount++; System.out.println("Kills: " + killCount); }
+                    for (enemy e : killedEnemies) {
+                        spawner.removeEnemy(e);
+                        killCount++;
+                        addScore(SCORE_PER_ENEMY);
+                        System.out.println("Kills: " + killCount + " Score: " + score);
+                    }
                 }
 
                 {

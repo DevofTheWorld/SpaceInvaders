@@ -53,7 +53,7 @@ public class playerBullets {
         try {
             Media sound = new Media(playerBullets.class.getResource("/SFX/shot1.wav").toExternalForm());
             MediaPlayer sfx = new MediaPlayer(sound);
-            sfx.setVolume(0.1);
+            sfx.setVolume(0.2);
             sfx.play();
             sfx.setOnEndOfMedia(sfx::dispose);
         } catch (Exception ignored) {
