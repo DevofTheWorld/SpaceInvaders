@@ -11,7 +11,7 @@ public class SpeedBuff {
     private static final double FALL_SPEED = 2.0;
 
     public SpeedBuff(Pane root, double x, double y) {
-        Image img = new Image(SpeedBuff.class.getResource("/orbBuff.png").toExternalForm());
+        Image img = new Image(SpeedBuff.class.getResource("/Buff/orbBuff.png").toExternalForm());
         sprite = new ImageView(img);
         sprite.setFitWidth(20);
         sprite.setPreserveRatio(true);

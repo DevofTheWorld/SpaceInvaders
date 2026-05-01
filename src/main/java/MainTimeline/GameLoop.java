@@ -285,7 +285,7 @@ public class GameLoop {
         bossMusicPlaying = true;
         try {
             Media bossMusic = new Media(
-                    GameLoop.class.getResource("/bossbgm.mp3").toExternalForm());
+                    GameLoop.class.getResource("/BGM/bossbgm.mp3").toExternalForm());
             bossMusicPlayer = new MediaPlayer(bossMusic);
             bossMusicPlayer.setCycleCount(MediaPlayer.INDEFINITE);
             bossMusicPlayer.setVolume(0.6);
@@ -529,7 +529,7 @@ public class GameLoop {
                 List<SpeedBuff> collectedBuffs = new ArrayList<>();
                 for (SpeedBuff buff : asteroidSpawner.getBuffs()) {
                     if (buff.getSprite().getBoundsInParent().intersects(player.getSprite().getBoundsInParent())) {
-                        collectedBuffs.add(buff); bullets.activateSpeedBuff(now); playSfx("/speedbuff.wav", 0.6);
+                        collectedBuffs.add(buff); bullets.activateSpeedBuff(now); playSfx("/SFX/speedbuff.wav", 0.6);
                     }
                 }
                 collectedBuffs.forEach(asteroidSpawner::removeBuff);
@@ -537,7 +537,7 @@ public class GameLoop {
                 List<HealthOrb> collectedOrbs = new ArrayList<>();
                 for (HealthOrb orb : asteroidSpawner.getHealthOrbs()) {
                     if (orb.getSprite().getBoundsInParent().intersects(player.getSprite().getBoundsInParent())) {
-                        collectedOrbs.add(orb); player.restoreHealth(); playSfx("/healthup.wav", 0.7);
+                        collectedOrbs.add(orb); player.restoreHealth(); playSfx("/SFX/healthup.wav", 0.7);
                     }
                 }
                 collectedOrbs.forEach(asteroidSpawner::removeHealthOrb);

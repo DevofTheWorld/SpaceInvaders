@@ -16,8 +16,8 @@ public class playerBullets {
     private List<ImageView> bullets = new ArrayList<>();
     private List<Long> spawnTimes = new ArrayList<>();
 
-    private Image frame1 = new Image(getClass().getResource("/shoot1.png").toExternalForm());
-    private Image frame2 = new Image(getClass().getResource("/shoot2.png").toExternalForm());
+    private Image frame1 = new Image(getClass().getResource("/animation/shoot1.png").toExternalForm());
+    private Image frame2 = new Image(getClass().getResource("/animation/shoot2.png").toExternalForm());
 
     private static final long FRAME_DURATION = 100_000_000L;
 
@@ -51,7 +51,7 @@ public class playerBullets {
         
         // play shoot sfx
         try {
-            Media sound = new Media(playerBullets.class.getResource("/shot1.wav").toExternalForm());
+            Media sound = new Media(playerBullets.class.getResource("/SFX/shot1.wav").toExternalForm());
             MediaPlayer sfx = new MediaPlayer(sound);
             sfx.setVolume(0.1);
             sfx.play();

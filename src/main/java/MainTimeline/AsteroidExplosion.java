@@ -18,7 +18,7 @@ public class AsteroidExplosion {
     public AsteroidExplosion(Pane root, double x, double y, double size) {
         for (int i = 0; i < 5; i++) {
             frames[i] = new Image(
-                    AsteroidExplosion.class.getResource("/explosion" + (i + 1) + ".png").toExternalForm()
+                    AsteroidExplosion.class.getResource("/Explosion/explosion" + (i + 1) + ".png").toExternalForm()
             );
         }
 
@@ -35,7 +35,7 @@ public class AsteroidExplosion {
 
         //play explosion sfx
         try {
-            Media sound = new Media(AsteroidExplosion.class.getResource("/explosion.wav").toExternalForm());
+            Media sound = new Media(AsteroidExplosion.class.getResource("/SFX/explosion.wav").toExternalForm());
             MediaPlayer sfx = new MediaPlayer(sound);
             sfx.setVolume(0.7);
             sfx.play();
