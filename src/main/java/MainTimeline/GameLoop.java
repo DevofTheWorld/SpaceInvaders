@@ -117,6 +117,7 @@ public class GameLoop {
 
     private long lastFireTime = 0;
     private static final long FIRE_RATE = 200_000_000L;
+    private static final long RAPID_FIRE_RATE = 90_000_000L;
 
     //Constructor
     public GameLoop(Player player, Control control, playerBullets bullets,
@@ -623,7 +624,8 @@ public class GameLoop {
                 if (control.dashPressed) { player.dash(dx, dy, now); control.dashPressed = false; }
                 player.move(dx, dy, dx != 0 || dy != 0, now);
 
-                if (control.fireHeld && now - lastFireTime >= FIRE_RATE) {
+                long currentFireRate = bullets.isSpeedBuffActive(now) ? RAPID_FIRE_RATE : FIRE_RATE;
+                if (control.fireHeld && now - lastFireTime >= currentFireRate) {
                     bullets.shoot();
                     lastFireTime = now;
                 }

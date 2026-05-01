@@ -26,7 +26,7 @@ public class playerBullets {
     private long speedBuffEndTime = 0;
     private static final long BUFF_DURATION = 5_000_000_000L; // 5 seconds
     private static final double NORMAL_SPEED = 5;
-    private static final double BUFFED_SPEED = 10;
+    private static final double BUFFED_SPEED = 15;
 
     public playerBullets(Player player, Pane root) {
         this.player = player;
