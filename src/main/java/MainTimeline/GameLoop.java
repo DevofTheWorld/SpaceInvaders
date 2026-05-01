@@ -22,7 +22,6 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.geometry.Pos;
 import javafx.util.Duration;
-
 import java.util.ArrayList;
 import java.util.List;
 import javafx.scene.media.Media;
@@ -30,7 +29,7 @@ import javafx.scene.media.MediaPlayer;
 
 public class GameLoop {
 
-    // dependencies
+    // Objects shared across the game loop: player, controls, spawners, scene root, and stage.
     private final Control control;
     private final Player player;
     private final playerBullets bullets;
@@ -41,51 +40,51 @@ public class GameLoop {
     private final Stage stage;
     private javafx.scene.media.MediaPlayer mediaPlayer;
 
-    // Player HP bar
-    private static final int    PLAYER_MAX_HP    = 3;
-    private static final double PLR_BAR_W        = 220;
-    private static final double PLR_BAR_H        = 14;
-    private static final double PLR_BAR_X        = 25;
-    private static final double PLR_BAR_Y        = 670;   // bottom-left
-    private static final double PLR_SEG_GAP      = 4;
+    // Constants for the player HP HUD shown at the bottom-left of the screen.
+    private static final int    PLAYER_MAX_HP = 3;
+    private static final double PLR_BAR_W = 220;
+    private static final double PLR_BAR_H = 14;
+    private static final double PLR_BAR_X = 25;
+    private static final double PLR_BAR_Y = 670;   // bottom-left
+    private static final double PLR_SEG_GAP = 4;
 
     // One rectangle per HP segment + a shared scanline
-    private final List<Rectangle> plrSegFills    = new ArrayList<>();
-    private final List<Rectangle> plrSegGlows    = new ArrayList<>();
-    private Rectangle              plrScanline;
-    private Text                   plrHpLabel;
-    private Timeline               plrPulse;
-    private Timeline               plrScanlineAnim;
-    private Color                  plrCurrentColor = Color.web("#00ffe7");
-    private int                    lastKnownHp     = PLAYER_MAX_HP;
+    private final List<Rectangle> plrSegFills = new ArrayList<>();
+    private final List<Rectangle> plrSegGlows = new ArrayList<>();
+    private Rectangle plrScanline;
+    private Text plrHpLabel;
+    private Timeline plrPulse;
+    private Timeline plrScanlineAnim;
+    private Color plrCurrentColor = Color.web("#00ffe7");
+    private int lastKnownHp = PLAYER_MAX_HP;
 
-    // Game timer HUD
-    private static final long   GAME_DURATION_NANOS = 120_000_000_000L;
-    private static final double TIMER_X             = 25;
-    private static final double TIMER_Y             = 35;
-    private Text                timerLabel;
-    private long                gameStartTime       = -1;
+    // Two-minute match timer shown at the top-left. When it reaches zero, the player loses.
+    private static final long GAME_DURATION_NANOS = 120_000_000_000L;
+    private static final double TIMER_X = 25;
+    private static final double TIMER_Y = 35;
+    private Text timerLabel;
+    private long gameStartTime = -1;
 
-    // Score HUD
-    private static final int    SCORE_PER_ENEMY     = 100;
-    private static final int    BOSS_SCORE_THRESHOLD = 1500;
-    private static final long   BOSS_FORCE_SPAWN_NANOS = 90_000_000_000L;
-    private static final double SCORE_X             = 25;
-    private static final double SCORE_Y             = 62;
-    private Text                scoreLabel;
-    private int                 score               = 0;
+    // Score HUD and boss trigger rules. The boss appears at the score threshold or backup time.
+    private static final int SCORE_PER_ENEMY = 100;
+    private static final int BOSS_SCORE_THRESHOLD = 1500;
+    private static final long BOSS_FORCE_SPAWN_NANOS = 90_000_000_000L;
+    private static final double SCORE_X = 25;
+    private static final double SCORE_Y = 62;
+    private Text scoreLabel;
+    private int score = 0;
 
-    // Speed buff HUD
-    private static final double BUFF_BAR_W          = 170;
-    private static final double BUFF_BAR_H          = 12;
-    private static final double BUFF_BAR_X          = 525;
-    private static final double BUFF_BAR_Y          = 680;
-    private Text                speedBuffLabel;
-    private Rectangle           speedBuffTrack;
-    private Rectangle           speedBuffFill;
-    private boolean             speedBuffWasActive  = false;
+    // Bottom-right rapid-fire indicator that follows the active speed buff duration.
+    private static final double BUFF_BAR_W = 170;
+    private static final double BUFF_BAR_H = 12;
+    private static final double BUFF_BAR_X = 525;
+    private static final double BUFF_BAR_Y = 680;
+    private Text speedBuffLabel;
+    private Rectangle speedBuffTrack;
+    private Rectangle speedBuffFill;
+    private boolean speedBuffWasActive  = false;
 
-    // Boss HP bar
+    // Boss HP HUD shown near the top when the boss phase starts.
     private static final double HP_BAR_W = 400;
     private static final double HP_BAR_H = 14;
     private static final double HP_BAR_X = 160;
@@ -95,20 +94,20 @@ public class GameLoop {
     private Rectangle bossHpFill;
     private Rectangle bossHpGlowRect;
     private Rectangle bossHpScanline;
-    private Text      bossHpLabel;
-    private Text      bossHpPercent;
-    private Timeline  hpPulseTimeline;
-    private Timeline  scanlineTimeline;
-    private Color     currentFillColor = Color.web("#00ffe7");
+    private Text bossHpLabel;
+    private Text bossHpPercent;
+    private Timeline hpPulseTimeline;
+    private Timeline scanlineTimeline;
+    private Color currentFillColor = Color.web("#00ffe7");
 
-    // state
+    // Game state flags used to prevent phases and music from starting more than once.
     public int  killCount   = 0;
 
     private boolean bossPhaseTriggered = false;
-    private boolean bossMusicPlaying   = false;
-    private boolean bossHpBarShown     = false;
-    private boolean bossSpawned        = false;
-    private Boss    boss               = null;
+    private boolean bossMusicPlaying = false;
+    private boolean bossHpBarShown = false;
+    private boolean bossSpawned = false;
+    private Boss boss = null;
     private final List<BossBeam> bossBeams = new ArrayList<>();
 
     private javafx.scene.media.MediaPlayer bossMusicPlayer;
@@ -118,20 +117,20 @@ public class GameLoop {
     private static final long FIRE_RATE = 200_000_000L;
     private static final long RAPID_FIRE_RATE = 90_000_000L;
 
-    //Constructor
+    // Constructor stores the game objects and creates all HUD elements before the loop starts.
     public GameLoop(Player player, Control control, playerBullets bullets,
                     enemySpawner spawner, enemyBullets enemyBullets,
                     asteroidSpawner asteroidSpawner, Pane gameRoot, Stage stage,
                     javafx.scene.media.MediaPlayer mediaPlayer) {
-        this.player          = player;
-        this.control         = control;
-        this.bullets         = bullets;
-        this.spawner         = spawner;
-        this.enemyBullets    = enemyBullets;
+        this.player = player;
+        this.control = control;
+        this.bullets = bullets;
+        this.spawner = spawner;
+        this.enemyBullets = enemyBullets;
         this.asteroidSpawner = asteroidSpawner;
-        this.gameRoot        = gameRoot;
-        this.stage           = stage;
-        this.mediaPlayer     = mediaPlayer;
+        this.gameRoot = gameRoot;
+        this.stage = stage;
+        this.mediaPlayer = mediaPlayer;
 
         showPlayerHpBar();
         showGameTimer();
@@ -139,21 +138,21 @@ public class GameLoop {
         showSpeedBuffHud();
     }
 
-    //  Helper builders
+    // Creates clickable image buttons used by the game-over and victory screens.
     private ImageView makeImageButton(String path, double width) {
         Image img = new Image(GameLoop.class.getResource(path).toExternalForm());
         ImageView btn = new ImageView(img);
         btn.setFitWidth(width);
         btn.setPreserveRatio(true);
         btn.setCursor(Cursor.HAND);
-        btn.addEventHandler(MouseEvent.MOUSE_ENTERED,  e -> btn.setOpacity(0.8));
-        btn.addEventHandler(MouseEvent.MOUSE_EXITED,   e -> btn.setOpacity(1.0));
-        btn.addEventHandler(MouseEvent.MOUSE_PRESSED,  e -> btn.setOpacity(0.6));
-        btn.addEventHandler(MouseEvent.MOUSE_RELEASED, e -> btn.setOpacity(1.0));
+        btn.addEventHandler(MouseEvent.MOUSE_ENTERED,e -> btn.setOpacity(0.8));
+        btn.addEventHandler(MouseEvent.MOUSE_EXITED,e -> btn.setOpacity(1.0));
+        btn.addEventHandler(MouseEvent.MOUSE_PRESSED, e -> btn.setOpacity(0.6));
+        btn.addEventHandler(MouseEvent.MOUSE_RELEASED,e -> btn.setOpacity(1.0));
         return btn;
     }
 
-    // Player HP bar
+    // Builds the segmented player HP bar and its looping glow/scanline effects.
     private void showPlayerHpBar() {
         double segW = (PLR_BAR_W - PLR_SEG_GAP * (PLAYER_MAX_HP - 1)) / PLAYER_MAX_HP;
         Color frameColor = Color.web("#00ffe7");
@@ -241,6 +240,7 @@ public class GameLoop {
     }
 
     private void showGameTimer() {
+        //Initial text is replaced every frame by updateGameTimer().
         timerLabel = new Text("02:00");
         timerLabel.setFont(Font.font("Monospace", FontWeight.BOLD, 24));
         timerLabel.setFill(Color.web("#00ffe7"));
@@ -256,6 +256,7 @@ public class GameLoop {
     }
 
     private boolean updateGameTimer(long now) {
+        // AnimationTimer gives nanoseconds, so the timer stores all durations in nanos.
         if (gameStartTime < 0) gameStartTime = now;
 
         long elapsed = now - gameStartTime;
@@ -272,11 +273,12 @@ public class GameLoop {
                 glow.setColor(Color.web("#ff2244"));
             }
         }
-
+ 
         return remaining == 0;
     }
 
     private void showScoreHud() {
+        // Score starts at zero and increases when a normal enemy is destroyed.
         scoreLabel = new Text("SCORE 0000");
         scoreLabel.setFont(Font.font("Monospace", FontWeight.BOLD, 18));
         scoreLabel.setFill(Color.web("#00ffe7cc"));
@@ -297,6 +299,7 @@ public class GameLoop {
     }
 
     private boolean shouldTriggerBoss(long now) {
+        // Boss appears immediately at the score target, or later as a timed fallback.
         if (gameStartTime < 0) return false;
 
         long elapsed = now - gameStartTime;
@@ -307,6 +310,7 @@ public class GameLoop {
     }
 
     private void showSpeedBuffHud() {
+        // The progress bar is hidden until the player collects a rapid-fire buff.
         speedBuffLabel = new Text("RAPID FIRE READY");
         speedBuffLabel.setFont(Font.font("Monospace", FontWeight.BOLD, 14));
         speedBuffLabel.setFill(Color.web("#00ffe744"));
@@ -336,6 +340,7 @@ public class GameLoop {
     }
 
     private void updateSpeedBuffHud(long now) {
+        //Reads the buff timer from playerBullets so the HUD matches the real effect.
         long remaining = bullets.getSpeedBuffRemainingNanos(now);
         boolean active = remaining > 0;
 
@@ -361,6 +366,7 @@ public class GameLoop {
     }
 
     private void updatePlayerHpBar() {
+        // Only redraw when health changes, avoiding unnecessary work every frame.
         int hp = Math.max(0, player.getHealth());
         if (hp == lastKnownHp) return;
         lastKnownHp = hp;
@@ -409,9 +415,10 @@ public class GameLoop {
         }
     }
 
-    // Boss phase helpers
+    // Freezes normal spawning, fades out the main music, then starts the boss phase.
     private void triggerBossPhase() {
         bossPhaseTriggered = true;
+        spawner.setBossPhase(true);
         spawner.setFrozen(true);
         asteroidSpawner.setFrozen(true);
 
@@ -431,6 +438,7 @@ public class GameLoop {
     }
 
     private void startBossMusic() {
+        // Boss music and HP bar begin before the boss sprite enters the screen.
         bossMusicPlaying = true;
         try {
             Media bossMusic = new Media(
@@ -439,21 +447,23 @@ public class GameLoop {
             bossMusicPlayer.setCycleCount(MediaPlayer.INDEFINITE);
             bossMusicPlayer.setVolume(0.6);
             bossMusicPlayer.play();
-        } catch (Exception ex) { ex.printStackTrace(); }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
 
         showBossHpBar();
         new Timeline(new KeyFrame(Duration.seconds(1), e -> spawnBoss())).play();
     }
 
-    // Boss HP bar (unchanged)
+    // Builds the boss HP bar, percentage text, and animated scanline.
     private void showBossHpBar() {
         bossHpBarShown = true;
         double bx = HP_BAR_X, by = HP_BAR_Y, bw = HP_BAR_W, bh = HP_BAR_H, cs = 8;
         Color frameColor = Color.web("#00ffe7");
 
-        addCornerBracket(bx - 3,          by - 3,          cs, cs, true,  true,  frameColor);
-        addCornerBracket(bx + bw - cs + 3, by - 3,          cs, cs, false, true,  frameColor);
-        addCornerBracket(bx - 3,          by + bh - cs + 3, cs, cs, true,  false, frameColor);
+        addCornerBracket(bx - 3,by - 3,cs, cs,true,true,frameColor);
+        addCornerBracket(bx + bw - cs + 3, by - 3,cs, cs, false, true,  frameColor);
+        addCornerBracket(bx - 3,by + bh - cs + 3, cs, cs, true,  false, frameColor);
         addCornerBracket(bx + bw - cs + 3, by + bh - cs + 3, cs, cs, false, false, frameColor);
 
         bossHpTrack = new Rectangle(bw, bh);
@@ -534,6 +544,7 @@ public class GameLoop {
 
     private void addCornerBracket(double x, double y, double w, double h,
                                    boolean left, boolean top, Color color) {
+        // Small sci-fi corner pieces reused by both player and boss health bars.
         double hx1 = left ? x : x + w,  hx2 = left ? x + w : x;
         double vy1 = top  ? y : y + h,  vy2 = top  ? y + h : y;
         Line horiz = new Line(hx1, vy1, hx2, vy1);
@@ -550,6 +561,7 @@ public class GameLoop {
     }
 
     private LinearGradient makeHpGradient(double width, Color base) {
+        // Shared bright-to-dim gradient used for HP bars and buff progress bars.
         Color bright = base.deriveColor(0, 1.0, 1.4, 1.0);
         Color mid    = base.deriveColor(0, 1.0, 0.9, 1.0);
         Color dim    = base.deriveColor(0, 0.8, 0.6, 1.0);
@@ -561,12 +573,14 @@ public class GameLoop {
     }
 
     private void spawnBoss() {
+        // Creates the boss and lets asteroid spawning continue during the fight.
         boss = new Boss(gameRoot, System.nanoTime());
         bossSpawned = true;
         asteroidSpawner.setFrozen(false);
     }
 
     private void updateBossHpBar() {
+        // Shrinks the boss HP bar and changes its color as health gets lower.
         if (bossHpFill == null || boss == null) return;
         double ratio = Math.max(0, (double) boss.getHp() / Boss.MAX_HP);
         double fillW = HP_BAR_W * ratio;
@@ -600,19 +614,21 @@ public class GameLoop {
         bossHpPercent.setTranslateX(HP_BAR_X + HP_BAR_W - 34);
     }
 
-    // Main loop
+    // Main AnimationTimer: runs once per frame and updates movement, combat, HUD, and win/loss checks.
     public void start() {
         AnimationTimer[] timerRef = new AnimationTimer[1];
 
         timerRef[0] = new AnimationTimer() {
             @Override
             public void handle(long now) {
+                // Timer reaches zero before anything else, so timeout always ends the run.
                 if (updateGameTimer(now)) {
                     timerRef[0].stop();
                     showGameOver();
                     return;
                 }
 
+                // Convert currently pressed movement keys into one movement direction.
                 double dx = 0, dy = 0;
                 if (control.upPressed)    dy -= 1;
                 if (control.downPressed)  dy += 1;
@@ -622,16 +638,18 @@ public class GameLoop {
                 if (control.dashPressed) { player.dash(dx, dy, now); control.dashPressed = false; }
                 player.move(dx, dy, dx != 0 || dy != 0, now);
 
+                // Holding fire repeatedly shoots; rapid-fire buff lowers this cooldown.
                 long currentFireRate = bullets.isSpeedBuffActive(now) ? RAPID_FIRE_RATE : FIRE_RATE;
                 if (control.fireHeld && now - lastFireTime >= currentFireRate) {
                     bullets.shoot();
                     lastFireTime = now;
                 }
 
-                // ← replaces updateHealthDisplay()
+                // Refresh HUD elements that can change during regular gameplay.
                 updatePlayerHpBar();
                 updateSpeedBuffHud(now);
 
+                // Move player bullets upward, remove off-screen bullets, and animate their sprites.
                 bullets.getBullets().removeIf(b -> {
                     if (b.getTranslateY() < -20) { bullets.getRoot().getChildren().remove(b); return true; }
                     return false;
@@ -639,14 +657,18 @@ public class GameLoop {
                 for (ImageView b : bullets.getBullets()) b.setTranslateY(b.getTranslateY() - bullets.getBulletSpeed(now));
                 bullets.updateBullets(now);
 
-                if (!bossPhaseTriggered && shouldTriggerBoss(now)) triggerBossPhase();
+                // Start boss phase when the score target or timed fallback is reached.
+                if (!bossPhaseTriggered && shouldTriggerBoss(now))
+                    triggerBossPhase();
 
+                // Update regular enemy and asteroid systems while the game is active.
                 spawner.update(now, player.getX(), player.getY());
                 asteroidSpawner.update(now);
 
                 if (!bossSpawned) {
-                    List<ImageView> bulletHits    = new ArrayList<>();
-                    List<enemy>     killedEnemies = new ArrayList<>();
+                    // Before the boss appears, player bullets can damage regular enemies.
+                    List<ImageView> bulletHits = new ArrayList<>();
+                    List<enemy> killedEnemies = new ArrayList<>();
                     for (ImageView b : bullets.getBullets()) {
                         for (enemy e : spawner.getEnemies()) {
                             if (b.getBoundsInParent().intersects(e.getSprite().getBoundsInParent())) {
@@ -658,7 +680,9 @@ public class GameLoop {
                     }
                     for (ImageView b : bulletHits) {
                         int idx = bullets.getBullets().indexOf(b);
-                        if (idx >= 0) { bullets.getSpawnTimes().remove(idx); bullets.getBullets().remove(idx); }
+                        if (idx >= 0) { bullets.getSpawnTimes().remove(idx);
+                            bullets.getBullets().remove(idx);
+                        }
                         gameRoot.getChildren().remove(b);
                     }
                     for (enemy e : killedEnemies) {
@@ -670,8 +694,9 @@ public class GameLoop {
                 }
 
                 {
+                    // Player bullets can also destroy asteroids and trigger their drops.
                     List<ImageView>  bulletHitsAsteroid = new ArrayList<>();
-                    List<spaceDebris> asteroidsShot      = new ArrayList<>();
+                    List<spaceDebris> asteroidsShot = new ArrayList<>();
                     for (ImageView b : bullets.getBullets()) {
                         for (spaceDebris a : asteroidSpawner.getAsteroids()) {
                             if (b.getBoundsInParent().intersects(a.getSprite().getBoundsInParent())) {
@@ -687,6 +712,7 @@ public class GameLoop {
                     for (spaceDebris a : asteroidsShot) asteroidSpawner.destroyAsteroid(a);
                 }
 
+                // Collect rapid-fire buffs and start their five-second effect.
                 List<SpeedBuff> collectedBuffs = new ArrayList<>();
                 for (SpeedBuff buff : asteroidSpawner.getBuffs()) {
                     if (buff.getSprite().getBoundsInParent().intersects(player.getSprite().getBoundsInParent())) {
@@ -695,6 +721,7 @@ public class GameLoop {
                 }
                 collectedBuffs.forEach(asteroidSpawner::removeBuff);
 
+                // Collect health orbs and restore one point of player health.
                 List<HealthOrb> collectedOrbs = new ArrayList<>();
                 for (HealthOrb orb : asteroidSpawner.getHealthOrbs()) {
                     if (orb.getSprite().getBoundsInParent().intersects(player.getSprite().getBoundsInParent())) {
@@ -703,6 +730,7 @@ public class GameLoop {
                 }
                 collectedOrbs.forEach(asteroidSpawner::removeHealthOrb);
 
+                // Asteroid collision damages the player and removes the asteroid on a real hit.
                 List<spaceDebris> asteroidsToRemove = new ArrayList<>();
                 for (spaceDebris a : asteroidSpawner.getAsteroids()) {
                     if (a.getSprite().getBoundsInParent().intersects(player.getSprite().getBoundsInParent())) {
@@ -712,6 +740,7 @@ public class GameLoop {
                 }
                 asteroidsToRemove.forEach(asteroidSpawner::destroyAsteroid);
 
+                // Direct enemy collision damages the player and removes that enemy.
                 List<enemy> enemiesToRemove = new ArrayList<>();
                 for (enemy e : spawner.getEnemies()) {
                     if (e.collidesWith(player.getSprite())) {
@@ -721,6 +750,7 @@ public class GameLoop {
                 }
                 enemiesToRemove.forEach(spawner::removeEnemy);
 
+                // Enemy projectiles damage the player and disappear after hitting.
                 List<ImageView> enemyBulletsToRemove = new ArrayList<>();
                 for (ImageView eb : enemyBullets.getBullets()) {
                     if (eb.getBoundsInParent().intersects(player.getSprite().getBoundsInParent())) {
@@ -728,43 +758,58 @@ public class GameLoop {
                         if (hit) { enemyBulletsToRemove.add(eb); if (player.isDead()) { timerRef[0].stop(); showGameOver(); return; } }
                     }
                 }
-                for (ImageView eb : enemyBulletsToRemove) { gameRoot.getChildren().remove(eb); enemyBullets.getBullets().remove(eb); }
+                for (ImageView eb : enemyBulletsToRemove) {
+                    gameRoot.getChildren().remove(eb); enemyBullets.getBullets().remove(eb);
+                }
 
                 if (bossSpawned && boss != null && !boss.isDead()) {
+                    // Boss update handles movement, charging, firing readiness, and animation.
 
                     boss.update(now);
 
-    
+                    // Once the boss has entered, regular enemies are allowed again.
                     if (boss.isEntered() && spawner.isFrozen()) {
                      spawner.setFrozen(false);
                     }
 
+                    // Player can be hurt by touching the boss sprite.
                     if (boss.collidesWith(player.getSprite())) {
                         boolean hit = player.takeDamage(now);
-                        if (hit && player.isDead()) { timerRef[0].stop(); showGameOver(); return; }
+                        if (hit && player.isDead()) { timerRef[0].stop(); showGameOver();
+                            return; }
                     }
                     updateBossHpBar();
 
+                    // Player bullets damage the boss unless it is in its invincibility window.
                     List<ImageView> bossHits = new ArrayList<>();
                     for (ImageView b : bullets.getBullets()) {
                         if (b.getBoundsInParent().intersects(boss.getSprite().getBoundsInParent())) {
                             bossHits.add(b);
                             boolean killed = boss.takeDamage(now);
-                            if (killed) { new AsteroidExplosion(gameRoot, boss.getX(), boss.getY(), 200); boss.remove(gameRoot); timerRef[0].stop(); showVictory(); return; }
+                            if (killed) {
+                                new AsteroidExplosion(gameRoot, boss.getX(), boss.getY(), 200);
+                                boss.remove(gameRoot); timerRef[0].stop();
+                                showVictory();
+                                return;
+                            }
                             break;
                         }
                     }
                     for (ImageView b : bossHits) {
                         int idx = bullets.getBullets().indexOf(b);
-                        if (idx >= 0) { bullets.getSpawnTimes().remove(idx); bullets.getBullets().remove(idx); }
+                        if (idx >= 0) { bullets.getSpawnTimes().remove(idx);
+                            bullets.getBullets().remove(idx);
+                        }
                         gameRoot.getChildren().remove(b);
                     }
 
+                    // BossBeam objects are spawned when the boss finishes charging.
                     if (boss.isEntered() && boss.pollReadyToFire()) {
                         bossBeams.add(new BossBeam(gameRoot, boss.getBeamX(), boss.getBeamY(), now));
                         boss.setFrozen(true);
                     }
 
+                    // Active boss beams update, fade out, and damage the player on contact.
                     List<BossBeam> beamsToRemove = new ArrayList<>();
                     for (BossBeam beam : bossBeams) {
                         boolean offScreen = beam.update(now);
@@ -776,7 +821,10 @@ public class GameLoop {
                             if (player.isDead()) { timerRef[0].stop(); showGameOver(); return; }
                         }
                     }
-                    for (BossBeam beam : beamsToRemove) { beam.remove(gameRoot); bossBeams.remove(beam); boss.setFrozen(false); }
+                    for (BossBeam beam : beamsToRemove) {
+                        beam.remove(gameRoot); bossBeams.remove(beam);
+                        boss.setFrozen(false);
+                    }
                 }
             }
         };
@@ -784,7 +832,7 @@ public class GameLoop {
         timerRef[0].start();
     }
 
-    // Game-over screen
+    // Shows the game-over overlay and buttons after death or timer timeout.
     private void showGameOver() {
         stopBossMusic();
         stopHpBarAnimations();
@@ -811,7 +859,7 @@ public class GameLoop {
         gameRoot.getChildren().add(box);
     }
 
-    // Victory screen
+    // Shows the victory overlay after the boss is defeated.
     private void showVictory() {
         stopBossMusic();
         stopHpBarAnimations();
@@ -845,12 +893,13 @@ public class GameLoop {
         gameRoot.getChildren().add(box);
     }
 
-    // Music / SFX 
+    // Stops boss music and releases its media player.
     private void stopBossMusic() {
         if (bossMusicPlayer != null) { bossMusicPlayer.stop(); bossMusicPlayer.dispose(); bossMusicPlayer = null; }
     }
 
     private void stopHpBarAnimations() {
+        // Stop looping UI timelines so old effects do not keep running after the round ends.
         if (hpPulseTimeline  != null) { hpPulseTimeline.stop();  hpPulseTimeline  = null; }
         if (scanlineTimeline != null) { scanlineTimeline.stop(); scanlineTimeline = null; }
         if (plrPulse         != null) { plrPulse.stop();         plrPulse         = null; }
@@ -858,6 +907,7 @@ public class GameLoop {
     }
 
     private void resetMainBgm() {
+        // Return the main background music to its normal state before menu/restart transitions.
         if (activeFadeOut != null) { activeFadeOut.stop(); activeFadeOut = null; }
         if (mediaPlayer == null) return;
         mediaPlayer.stop();
@@ -866,16 +916,19 @@ public class GameLoop {
     }
 
     private void restartGame() {
+        // Recreate the whole game scene to reset player, enemies, HUD, and timers.
         stopBossMusic(); resetMainBgm(); mediaPlayer.play();
         stage.setScene(menuUI.startGame(stage, null));
     }
 
     private void goToMenu() {
+        // Leave gameplay and return to the main menu scene.
         stopBossMusic(); resetMainBgm(); mediaPlayer.play();
         stage.setScene(menuUI.createMenuScene(stage));
     }
 
     private void playSfx(String path, double volume) {
+        // Creates a short-lived media player for one-shot sound effects.
         try {
             Media sound = new Media(GameLoop.class.getResource(path).toExternalForm());
             MediaPlayer sfx = new MediaPlayer(sound);
